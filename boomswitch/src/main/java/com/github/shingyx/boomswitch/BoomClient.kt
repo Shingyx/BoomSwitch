@@ -4,6 +4,8 @@ import android.bluetooth.*
 import android.content.Context
 import android.util.Log
 import java.util.*
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionStage
 
 private enum class BoomClientState {
     STOPPED,
@@ -19,17 +21,22 @@ private const val TAG = "BoomClient"
 private val SERVICE_UUID = UUID.fromString("000061fe-0000-1000-8000-00805f9b34fb")
 private val WRITE_POWER_UUID = UUID.fromString("c6d6dc0d-07f5-47ef-9b59-630622b01fd3")
 private val READ_STATE_UUID = UUID.fromString("4356a21c-a599-4b94-a1c8-4b91fca02a9a")
-private const val INACTIVE_STATE = 0.toByte()
+
+private const val BOOM_INACTIVE_STATE = 0.toByte()
+private const val BOOM_POWER_ON = 1.toByte()
+private const val BOOM_STANDBY = 2.toByte()
 
 private var boomClientState = BoomClientState.STOPPED
+private var future = CompletableFuture<Boolean?>()
 
-fun switchPower(context: Context, device: BluetoothDevice): Boolean {
+fun switchPower(context: Context, device: BluetoothDevice): CompletionStage<Boolean?> {
     if (boomClientState != BoomClientState.STOPPED) {
-        Log.i(TAG, "Already switching power")
-        return false
+        Log.i(TAG, "Already switching power, returning existing future")
+    } else {
+        future = CompletableFuture()
+        connectToDevice(context, device)
     }
-    connectToDevice(context, device)
-    return boomClientState != BoomClientState.STOPPED
+    return future
 }
 
 private val gattCallback = object : BluetoothGattCallback() {
@@ -65,18 +72,20 @@ private val gattCallback = object : BluetoothGattCallback() {
         Log.v(TAG, "onCharacteristicRead: $status, ${characteristic.uuid} = [${characteristic.value?.joinToString()}]")
         if (status != BluetoothGatt.GATT_SUCCESS || characteristic.uuid != READ_STATE_UUID) {
             Log.e(TAG, "Failed to read state characteristic")
-            dispose(gatt)
-            return
+            return dispose(gatt)
         }
         writePowerCharacteristic(gatt, characteristic.value[0])
     }
 
     override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
         Log.v(TAG, "onCharacteristicWrite: $status, ${characteristic.uuid} = [${characteristic.value?.joinToString()}]")
-        if (status != BluetoothGatt.GATT_SUCCESS || characteristic.uuid != WRITE_POWER_UUID) {
+        val completeValue = if (status != BluetoothGatt.GATT_SUCCESS || characteristic.uuid != WRITE_POWER_UUID) {
             Log.e(TAG, "Failed to write power characteristic")
+            null
+        } else {
+            characteristic.value[6] == BOOM_POWER_ON
         }
-        dispose(gatt)
+        dispose(gatt, completeValue)
     }
 }
 
@@ -86,7 +95,7 @@ private fun connectToDevice(context: Context, device: BluetoothDevice) {
         return
     }
     Log.e(TAG, "Failed to create GATT client")
-    boomClientState = BoomClientState.STOPPED
+    dispose(null)
 }
 
 private fun retryConnectToDevice(gatt: BluetoothGatt) {
@@ -121,10 +130,10 @@ private fun writePowerCharacteristic(gatt: BluetoothGatt, deviceState: Byte) {
     val powerCharacteristic = gatt.getService(SERVICE_UUID)?.getCharacteristic(WRITE_POWER_UUID)
     if (powerCharacteristic != null) {
         val message = ByteArray(7)
-        message[6] = if (deviceState == INACTIVE_STATE) {
-            1 // power on
+        message[6] = if (deviceState == BOOM_INACTIVE_STATE) {
+            BOOM_POWER_ON
         } else {
-            2 // standby
+            BOOM_STANDBY
         }
         powerCharacteristic.value = message
         if (gatt.writeCharacteristic(powerCharacteristic)) {
@@ -136,7 +145,8 @@ private fun writePowerCharacteristic(gatt: BluetoothGatt, deviceState: Byte) {
     dispose(gatt)
 }
 
-private fun dispose(gatt: BluetoothGatt) {
-    gatt.close()
+private fun dispose(gatt: BluetoothGatt?, completeValue: Boolean? = null) {
+    gatt?.close()
+    future.complete(completeValue)
     boomClientState = BoomClientState.STOPPED
 }

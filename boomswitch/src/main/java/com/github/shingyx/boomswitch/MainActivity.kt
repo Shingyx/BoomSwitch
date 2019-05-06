@@ -25,7 +25,9 @@ class MainActivity : AppCompatActivity() {
 
             Log.d(TAG, "${boomDevice.name}: ${boomDevice.address}")
 
-            switchPower(this, boomDevice)
+            switchPower(this, boomDevice).thenAccept {
+                Log.i(TAG, "switchPower result: $it")
+            }
         }
     }
 }
