@@ -8,15 +8,17 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 
 private enum class BoomClientState {
-    STOPPED,
+    NOT_STARTED,
     CONNECTING,
     CONNECTING_RETRY,
     DISCOVERING_SERVICES,
     READING_STATE,
     WRITING_POWER,
+    DISCONNECTING,
+    COMPLETED,
 }
 
-private const val TAG = "BoomClient"
+private val TAG = BoomClient::class.java.simpleName
 
 private val SERVICE_UUID = UUID.fromString("000061fe-0000-1000-8000-00805f9b34fb")
 private val WRITE_POWER_UUID = UUID.fromString("c6d6dc0d-07f5-47ef-9b59-630622b01fd3")
@@ -26,127 +28,157 @@ private const val BOOM_INACTIVE_STATE = 0.toByte()
 private const val BOOM_POWER_ON = 1.toByte()
 private const val BOOM_STANDBY = 2.toByte()
 
-private var boomClientState = BoomClientState.STOPPED
-private var future = CompletableFuture<Boolean?>()
+private val lock = Any()
+private var future: CompletionStage<Boolean>? = null
 
-fun switchPower(context: Context, device: BluetoothDevice): CompletionStage<Boolean?> {
-    if (boomClientState != BoomClientState.STOPPED) {
-        Log.i(TAG, "Already switching power, returning existing future")
-    } else {
-        future = CompletableFuture()
-        connectToDevice(context, device)
+fun switchPower(context: Context, device: BluetoothDevice): CompletionStage<Boolean> {
+    return synchronized(lock) {
+        if (future != null) {
+            Log.i(TAG, "Already switching power, returning existing future")
+        } else {
+            future = BoomClient(context, device).switchPower()
+            future!!.whenComplete { _, _ ->
+                synchronized(lock) { future = null }
+            }
+        }
+        future!!
     }
-    return future
 }
 
-private val gattCallback = object : BluetoothGattCallback() {
-    override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-        Log.v(TAG, "onConnectionStateChange: $status, $newState")
-        if (newState != BluetoothProfile.STATE_CONNECTED) {
-            if (boomClientState == BoomClientState.CONNECTING) {
-                Log.i(TAG, "Connection attempt failed, retrying")
-                retryConnectToDevice(gatt)
+private class BoomClient(
+    private val context: Context,
+    private val device: BluetoothDevice
+) : GattCallbackWrapper() {
+    private val completableFuture = CompletableFuture<Boolean>()
+    private var completeValue = false
+    private var boomClientState = BoomClientState.NOT_STARTED
+    private lateinit var gatt: BluetoothGatt
+
+    fun switchPower(): CompletionStage<Boolean> {
+        if (boomClientState == BoomClientState.NOT_STARTED) {
+            boomClientState = BoomClientState.CONNECTING
+            val connectResult = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
+            if (connectResult != null) {
+                gatt = connectResult
             } else {
-                if (boomClientState == BoomClientState.CONNECTING_RETRY) {
-                    Log.e(TAG, "Connection retry failed")
-                } else {
-                    Log.e(TAG, "Unexpectedly disconnected from device")
+                reject("Failed to create Bluetooth client. Is Bluetooth LE supported on your mobile device?")
+            }
+        }
+        return completableFuture
+    }
+
+    private fun resolve() {
+        teardown()
+        completableFuture.complete(completeValue)
+    }
+
+    private fun reject(errorMessage: String) {
+        val exception = Exception(errorMessage)
+        Log.e(TAG, "Failed to switch power.", exception)
+        teardown()
+        completableFuture.completeExceptionally(exception)
+    }
+
+    private fun teardown() {
+        if (this::gatt.isInitialized) {
+            gatt.close()
+        }
+        boomClientState = BoomClientState.COMPLETED
+    }
+
+    override fun onConnectionStateChange(status: Int, newState: Int) {
+        if (newState != BluetoothProfile.STATE_CONNECTED) {
+            when (boomClientState) {
+                BoomClientState.CONNECTING -> {
+                    boomClientState = BoomClientState.CONNECTING_RETRY
+                    Log.i(TAG, "Connection attempt failed, retrying.")
+                    if (!gatt.connect()) {
+                        reject("Failed to retry connection.")
+                    }
                 }
-                dispose(gatt)
+                BoomClientState.CONNECTING_RETRY -> reject("Second connection attempt failed.")
+                BoomClientState.DISCONNECTING -> resolve()
+                else -> reject("Unexpectedly disconnected from device.")
             }
             return
         }
-        discoverServices(gatt)
-    }
 
-    override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-        Log.v(TAG, "onServicesDiscovered $status")
-        if (status != BluetoothGatt.GATT_SUCCESS) {
-            Log.e(TAG, "Failed to discover services")
-            return dispose(gatt)
-        }
-        readStateCharacteristic(gatt)
-    }
-
-    override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
-        Log.v(TAG, "onCharacteristicRead: $status, ${characteristic.uuid} = [${characteristic.value?.joinToString()}]")
-        if (status != BluetoothGatt.GATT_SUCCESS || characteristic.uuid != READ_STATE_UUID) {
-            Log.e(TAG, "Failed to read state characteristic")
-            return dispose(gatt)
-        }
-        writePowerCharacteristic(gatt, characteristic.value[0])
-    }
-
-    override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
-        Log.v(TAG, "onCharacteristicWrite: $status, ${characteristic.uuid} = [${characteristic.value?.joinToString()}]")
-        val completeValue = if (status != BluetoothGatt.GATT_SUCCESS || characteristic.uuid != WRITE_POWER_UUID) {
-            Log.e(TAG, "Failed to write power characteristic")
-            null
-        } else {
-            characteristic.value[6] == BOOM_POWER_ON
-        }
-        dispose(gatt, completeValue)
-    }
-}
-
-private fun connectToDevice(context: Context, device: BluetoothDevice) {
-    if (device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE) != null) {
-        boomClientState = BoomClientState.CONNECTING
-        return
-    }
-    Log.e(TAG, "Failed to create GATT client")
-    dispose(null)
-}
-
-private fun retryConnectToDevice(gatt: BluetoothGatt) {
-    if (gatt.connect()) {
-        boomClientState = BoomClientState.CONNECTING_RETRY
-        return
-    }
-    Log.e(TAG, "Failed to retry connection")
-    dispose(gatt)
-}
-
-private fun discoverServices(gatt: BluetoothGatt) {
-    if (gatt.discoverServices()) {
         boomClientState = BoomClientState.DISCOVERING_SERVICES
-        return
+        if (!gatt.discoverServices()) {
+            reject("Failed to start discovering Bluetooth LE services.")
+        }
     }
-    Log.e(TAG, "Failed to start discovering services")
-    dispose(gatt)
-}
 
-private fun readStateCharacteristic(gatt: BluetoothGatt) {
-    val stateCharacteristic = gatt.getService(SERVICE_UUID)?.getCharacteristic(READ_STATE_UUID)
-    if (stateCharacteristic != null && gatt.readCharacteristic(stateCharacteristic)) {
+    override fun onServicesDiscovered(status: Int) {
+        if (status != BluetoothGatt.GATT_SUCCESS) {
+            return reject("Failed to discover Bluetooth LE services.")
+        }
+
         boomClientState = BoomClientState.READING_STATE
-        return
-    }
-    Log.e(TAG, "Failed to start reading state characteristic")
-    dispose(gatt)
-}
-
-private fun writePowerCharacteristic(gatt: BluetoothGatt, deviceState: Byte) {
-    val powerCharacteristic = gatt.getService(SERVICE_UUID)?.getCharacteristic(WRITE_POWER_UUID)
-    if (powerCharacteristic != null) {
-        val message = ByteArray(7)
-        message[6] = if (deviceState == BOOM_INACTIVE_STATE) {
-            BOOM_POWER_ON
-        } else {
-            BOOM_STANDBY
-        }
-        powerCharacteristic.value = message
-        if (gatt.writeCharacteristic(powerCharacteristic)) {
-            boomClientState = BoomClientState.WRITING_POWER
-            return
+        val stateCharacteristic = gatt.getService(SERVICE_UUID)?.getCharacteristic(READ_STATE_UUID)
+        if (stateCharacteristic == null || !gatt.readCharacteristic(stateCharacteristic)) {
+            reject("Failed to start reading the speaker's current state. The selected speaker might not be supported.")
         }
     }
-    Log.e(TAG, "Failed to start writing power characteristic")
-    dispose(gatt)
+
+    override fun onCharacteristicRead(characteristic: BluetoothGattCharacteristic, status: Int) {
+        if (status != BluetoothGatt.GATT_SUCCESS) {
+            return reject("Failed to read the speaker's current state.")
+        }
+
+        boomClientState = BoomClientState.WRITING_POWER
+        val powerCharacteristic = gatt.getService(SERVICE_UUID)?.getCharacteristic(WRITE_POWER_UUID)
+        if (powerCharacteristic != null) {
+            val message = ByteArray(7)
+            completeValue = characteristic.value[0] == BOOM_INACTIVE_STATE
+            message[6] = if (completeValue) {
+                BOOM_POWER_ON
+            } else {
+                BOOM_STANDBY
+            }
+            powerCharacteristic.value = message
+            if (gatt.writeCharacteristic(powerCharacteristic)) {
+                return
+            }
+        }
+        reject("Failed to start setting the speaker's new state. The selected speaker might not be supported.")
+    }
+
+    override fun onCharacteristicWrite(characteristic: BluetoothGattCharacteristic, status: Int) {
+        if (status != BluetoothGatt.GATT_SUCCESS) {
+            return reject("Failed to set the speaker's new state.")
+        }
+
+        boomClientState = BoomClientState.DISCONNECTING
+        gatt.disconnect()
+    }
 }
 
-private fun dispose(gatt: BluetoothGatt?, completeValue: Boolean? = null) {
-    gatt?.close()
-    future.complete(completeValue)
-    boomClientState = BoomClientState.STOPPED
+private abstract class GattCallbackWrapper {
+    protected val gattCallback = object : BluetoothGattCallback() {
+        override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+            Log.v(TAG, "onConnectionStateChange: $status, $newState")
+            onConnectionStateChange(status, newState)
+        }
+
+        override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+            Log.v(TAG, "onServicesDiscovered: $status")
+            onServicesDiscovered(status)
+        }
+
+        override fun onCharacteristicRead(gatt: BluetoothGatt, char: BluetoothGattCharacteristic, status: Int) {
+            Log.v(TAG, "onCharacteristicRead: $status, ${char.uuid} = [${char.value?.joinToString()}]")
+            onCharacteristicRead(char, status)
+        }
+
+        override fun onCharacteristicWrite(gatt: BluetoothGatt, char: BluetoothGattCharacteristic, status: Int) {
+            Log.v(TAG, "onCharacteristicWrite: $status, ${char.uuid} = [${char.value?.joinToString()}]")
+            onCharacteristicWrite(char, status)
+        }
+    }
+
+    protected abstract fun onConnectionStateChange(status: Int, newState: Int)
+    protected abstract fun onServicesDiscovered(status: Int)
+    protected abstract fun onCharacteristicRead(characteristic: BluetoothGattCharacteristic, status: Int)
+    protected abstract fun onCharacteristicWrite(characteristic: BluetoothGattCharacteristic, status: Int)
 }
