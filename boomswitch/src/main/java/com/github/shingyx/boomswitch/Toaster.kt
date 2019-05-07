@@ -9,7 +9,7 @@ class Toaster(
 ) {
     private var toast = Toast.makeText(context, "", Toast.LENGTH_LONG)
 
-    fun showToast(text: String) {
+    fun show(text: String) {
         fnWrapper {
             toast.cancel()
             toast = Toast.makeText(context, text, Toast.LENGTH_LONG)

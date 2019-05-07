@@ -16,6 +16,7 @@ private val READ_STATE_UUID = UUID.fromString("4356a21c-a599-4b94-a1c8-4b91fca02
 private const val BOOM_INACTIVE_STATE = 0.toByte()
 private const val BOOM_POWER_ON = 1.toByte()
 private const val BOOM_STANDBY = 2.toByte()
+private const val TIMEOUT = 15000.toLong()
 
 object BoomClient {
     private val lock = Any()
@@ -58,6 +59,9 @@ private class BoomClientInternal(
 ) : GattCallbackWrapper() {
     private val completableFuture = CompletableFuture<Boolean>()
     private var completeValue = false
+    private val timeoutTask = TimeoutTask(this::onTimedOut, TIMEOUT)
+    private lateinit var gatt: BluetoothGatt
+
     private var boomClientState = BoomClientState.NOT_STARTED
         set(value) {
             Log.i(TAG, "Setting boom client state to $value")
@@ -70,7 +74,6 @@ private class BoomClientInternal(
             }?.also(reportProgress)
             field = value
         }
-    private lateinit var gatt: BluetoothGatt
 
     fun switchPower(): CompletionStage<Boolean> {
         if (boomClientState == BoomClientState.NOT_STARTED) {
@@ -81,12 +84,12 @@ private class BoomClientInternal(
             } else {
                 reject("Failed to create Bluetooth client. Is Bluetooth LE supported on your mobile device?")
             }
+            completableFuture
+                .thenApply { "BOOM switched ${if (it) "on" else "off"}!" }
+                .exceptionally { it.cause?.message ?: "Unknown error." }
+                .thenApply(reportProgress)
+            timeoutTask.execute()
         }
-        completableFuture
-            .thenApply { "BOOM switched ${if (it) "on" else "off"}!" }
-            .exceptionally { it.cause?.message ?: "Unknown error." }
-            .thenApply(reportProgress)
-        // TODO add a timeout
         return completableFuture
     }
 
@@ -105,10 +108,21 @@ private class BoomClientInternal(
     }
 
     private fun teardown() {
+        timeoutTask.cancel(true)
         if (this::gatt.isInitialized) {
             gatt.close()
         }
         boomClientState = BoomClientState.COMPLETED
+    }
+
+    private fun onTimedOut() {
+        reject(
+            if (boomClientState == BoomClientState.CONNECTING || boomClientState == BoomClientState.CONNECTING_RETRY) {
+                "Failed to connect to speaker. Is the speaker in range?"
+            } else {
+                "Timed out switching speaker's power!"
+            }
+        )
     }
 
     override fun onConnectionStateChange(status: Int, newState: Int) {

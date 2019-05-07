@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
             Log.d(TAG, "${boomDevice.name}: ${boomDevice.address}")
 
             BoomClient.switchPower(this, boomDevice) {
-                runOnUiThread { toaster.showToast(it) }
+                runOnUiThread { toaster.show(it) }
             }
         }
     }

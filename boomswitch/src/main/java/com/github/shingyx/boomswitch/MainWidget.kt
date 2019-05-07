@@ -47,11 +47,11 @@ class MainWidget : AppWidgetProvider() {
                 val pairedDevices = bluetoothAdapter.bondedDevices
                 val boomDevice = pairedDevices.first()
                 BoomClient.switchPower(context, boomDevice) {
-                    toaster.showToast(it)
+                    toaster.show(it)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to get device", e)
-                toaster.showToast(e.message!!)
+                toaster.show(e.message ?: "Unknown error.")
             }
         }
     }
