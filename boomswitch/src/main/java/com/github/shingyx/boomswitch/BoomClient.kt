@@ -7,6 +7,35 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 
+private val TAG = BoomClient::class.java.simpleName
+
+private val SERVICE_UUID = UUID.fromString("000061fe-0000-1000-8000-00805f9b34fb")
+private val WRITE_POWER_UUID = UUID.fromString("c6d6dc0d-07f5-47ef-9b59-630622b01fd3")
+private val READ_STATE_UUID = UUID.fromString("4356a21c-a599-4b94-a1c8-4b91fca02a9a")
+
+private const val BOOM_INACTIVE_STATE = 0.toByte()
+private const val BOOM_POWER_ON = 1.toByte()
+private const val BOOM_STANDBY = 2.toByte()
+
+object BoomClient {
+    private val lock = Any()
+    private var future: CompletionStage<Boolean>? = null
+
+    fun switchPower(context: Context, device: BluetoothDevice): CompletionStage<Boolean> {
+        return synchronized(lock) {
+            if (future != null) {
+                Log.i(TAG, "Already switching power, returning existing future")
+            } else {
+                future = BoomClientInternal(context, device).switchPower()
+                future!!.whenComplete { _, _ ->
+                    synchronized(lock) { future = null }
+                }
+            }
+            future!!
+        }
+    }
+}
+
 private enum class BoomClientState {
     NOT_STARTED,
     CONNECTING,
@@ -18,34 +47,7 @@ private enum class BoomClientState {
     COMPLETED,
 }
 
-private val TAG = BoomClient::class.java.simpleName
-
-private val SERVICE_UUID = UUID.fromString("000061fe-0000-1000-8000-00805f9b34fb")
-private val WRITE_POWER_UUID = UUID.fromString("c6d6dc0d-07f5-47ef-9b59-630622b01fd3")
-private val READ_STATE_UUID = UUID.fromString("4356a21c-a599-4b94-a1c8-4b91fca02a9a")
-
-private const val BOOM_INACTIVE_STATE = 0.toByte()
-private const val BOOM_POWER_ON = 1.toByte()
-private const val BOOM_STANDBY = 2.toByte()
-
-private val lock = Any()
-private var future: CompletionStage<Boolean>? = null
-
-fun switchPower(context: Context, device: BluetoothDevice): CompletionStage<Boolean> {
-    return synchronized(lock) {
-        if (future != null) {
-            Log.i(TAG, "Already switching power, returning existing future")
-        } else {
-            future = BoomClient(context, device).switchPower()
-            future!!.whenComplete { _, _ ->
-                synchronized(lock) { future = null }
-            }
-        }
-        future!!
-    }
-}
-
-private class BoomClient(
+private class BoomClientInternal(
     private val context: Context,
     private val device: BluetoothDevice
 ) : GattCallbackWrapper() {
@@ -69,7 +71,9 @@ private class BoomClient(
 
     private fun resolve() {
         teardown()
-        completableFuture.complete(completeValue)
+        // delay result for better toast timing and to reduce likelihood of issues on reconnects
+        val resolveDelay = (if (completeValue) 2500 else 1000).toLong()
+        DelayedResolveTask(completableFuture, completeValue, resolveDelay).execute()
     }
 
     private fun reject(errorMessage: String) {

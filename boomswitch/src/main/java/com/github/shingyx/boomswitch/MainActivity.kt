@@ -9,9 +9,13 @@ import kotlinx.android.synthetic.main.activity_main.*
 private val TAG = MainActivity::class.java.simpleName
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var toaster: Toaster
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        toaster = Toaster(this)
 
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
@@ -25,9 +29,10 @@ class MainActivity : AppCompatActivity() {
 
             Log.d(TAG, "${boomDevice.name}: ${boomDevice.address}")
 
-            switchPower(this, boomDevice).thenAccept {
-                Log.i(TAG, "switchPower result: $it")
-            }
+            BoomClient.switchPower(this, boomDevice)
+                .thenApply { "BOOM switched ${if (it) "on" else "off"}!" }
+                .exceptionally { it.message }
+                .thenAccept { toaster.showToast(it) }
         }
     }
 }
