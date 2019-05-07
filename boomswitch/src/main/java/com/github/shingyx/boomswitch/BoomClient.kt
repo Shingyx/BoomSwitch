@@ -82,6 +82,11 @@ private class BoomClientInternal(
                 reject("Failed to create Bluetooth client. Is Bluetooth LE supported on your mobile device?")
             }
         }
+        completableFuture
+            .thenApply { "BOOM switched ${if (it) "on" else "off"}!" }
+            .exceptionally { it.cause?.message ?: "Unknown error." }
+            .thenApply(reportProgress)
+        // TODO add a timeout
         return completableFuture
     }
 

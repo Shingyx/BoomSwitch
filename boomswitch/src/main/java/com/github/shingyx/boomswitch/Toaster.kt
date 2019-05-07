@@ -1,15 +1,18 @@
 package com.github.shingyx.boomswitch
 
-import android.app.Activity
+import android.content.Context
 import android.widget.Toast
 
-class Toaster(private val activity: Activity) {
-    private var toast = Toast.makeText(activity, "", Toast.LENGTH_LONG)
+class Toaster(
+    private val context: Context,
+    private val fnWrapper: (() -> Unit) -> Unit
+) {
+    private var toast = Toast.makeText(context, "", Toast.LENGTH_LONG)
 
     fun showToast(text: String) {
-        activity.runOnUiThread {
+        fnWrapper {
             toast.cancel()
-            toast = Toast.makeText(activity, text, Toast.LENGTH_LONG)
+            toast = Toast.makeText(context, text, Toast.LENGTH_LONG)
             toast.show()
         }
     }

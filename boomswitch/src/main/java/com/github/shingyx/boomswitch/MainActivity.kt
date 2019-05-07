@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        toaster = Toaster(this)
+        toaster = Toaster(this) { runOnUiThread(it) }
 
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
@@ -29,10 +29,9 @@ class MainActivity : AppCompatActivity() {
 
             Log.d(TAG, "${boomDevice.name}: ${boomDevice.address}")
 
-            BoomClient.switchPower(this, boomDevice) { toaster.showToast(it) }
-                .thenApply { "BOOM switched ${if (it) "on" else "off"}!" }
-                .exceptionally { it.message }
-                .thenAccept { toaster.showToast(it) }
+            BoomClient.switchPower(this, boomDevice) {
+                runOnUiThread { toaster.showToast(it) }
+            }
         }
     }
 }
