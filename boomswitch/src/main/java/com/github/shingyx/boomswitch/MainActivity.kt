@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
 
             Log.d(TAG, "${boomDevice.name}: ${boomDevice.address}")
 
-            BoomClient.switchPower(this, boomDevice)
+            BoomClient.switchPower(this, boomDevice) { toaster.showToast(it) }
                 .thenApply { "BOOM switched ${if (it) "on" else "off"}!" }
                 .exceptionally { it.message }
                 .thenAccept { toaster.showToast(it) }

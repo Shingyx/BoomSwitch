@@ -21,12 +21,16 @@ object BoomClient {
     private val lock = Any()
     private var future: CompletionStage<Boolean>? = null
 
-    fun switchPower(context: Context, device: BluetoothDevice): CompletionStage<Boolean> {
+    fun switchPower(
+        context: Context,
+        device: BluetoothDevice,
+        reportProgress: (String) -> Unit
+    ): CompletionStage<Boolean> {
         return synchronized(lock) {
             if (future != null) {
                 Log.i(TAG, "Already switching power, returning existing future")
             } else {
-                future = BoomClientInternal(context, device).switchPower()
+                future = BoomClientInternal(context, device, reportProgress).switchPower()
                 future!!.whenComplete { _, _ ->
                     synchronized(lock) { future = null }
                 }
@@ -49,11 +53,23 @@ private enum class BoomClientState {
 
 private class BoomClientInternal(
     private val context: Context,
-    private val device: BluetoothDevice
+    private val device: BluetoothDevice,
+    private val reportProgress: (String) -> Unit
 ) : GattCallbackWrapper() {
     private val completableFuture = CompletableFuture<Boolean>()
     private var completeValue = false
     private var boomClientState = BoomClientState.NOT_STARTED
+        set(value) {
+            Log.i(TAG, "Setting boom client state to $value")
+            when (value) {
+                BoomClientState.CONNECTING -> "Connecting to speaker..."
+                BoomClientState.CONNECTING_RETRY -> "First connection attempt failed, retrying..."
+                BoomClientState.DISCOVERING_SERVICES -> "Switching speaker's power..."
+                BoomClientState.DISCONNECTING -> "Finalizing..."
+                else -> null
+            }?.also(reportProgress)
+            field = value
+        }
     private lateinit var gatt: BluetoothGatt
 
     fun switchPower(): CompletionStage<Boolean> {
