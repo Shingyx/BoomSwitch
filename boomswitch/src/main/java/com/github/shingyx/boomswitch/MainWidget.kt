@@ -46,7 +46,8 @@ class MainWidget : AppWidgetProvider() {
                 val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
                 val pairedDevices = bluetoothAdapter.bondedDevices
                 val boomDevice = pairedDevices.first()
-                BoomClient.switchPower(context, boomDevice) {
+                val deviceInfo = BluetoothDeviceInfo(boomDevice)
+                BoomClient.switchPower(context, deviceInfo) {
                     toaster.show(it)
                 }
             } catch (e: Exception) {

@@ -29,7 +29,8 @@ class MainActivity : AppCompatActivity() {
 
             Log.d(TAG, "${boomDevice.name}: ${boomDevice.address}")
 
-            BoomClient.switchPower(this, boomDevice) {
+            val deviceInfo = BluetoothDeviceInfo(boomDevice)
+            BoomClient.switchPower(this, deviceInfo) {
                 runOnUiThread { toaster.show(it) }
             }
         }

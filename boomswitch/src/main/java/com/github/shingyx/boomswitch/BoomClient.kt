@@ -2,6 +2,7 @@ package com.github.shingyx.boomswitch
 
 import android.bluetooth.*
 import android.content.Context
+import android.os.AsyncTask
 import android.util.Log
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -24,14 +25,14 @@ object BoomClient {
 
     fun switchPower(
         context: Context,
-        device: BluetoothDevice,
+        deviceInfo: BluetoothDeviceInfo,
         reportProgress: (String) -> Unit
     ): CompletionStage<Boolean> {
         return synchronized(lock) {
             if (future != null) {
                 Log.i(TAG, "Already switching power, returning existing future")
             } else {
-                future = BoomClientInternal(context, device, reportProgress).switchPower()
+                future = BoomClientInternal(context, deviceInfo, reportProgress).switchPower()
                 future!!.whenComplete { _, _ ->
                     synchronized(lock) { future = null }
                 }
@@ -54,7 +55,7 @@ private enum class BoomClientState {
 
 private class BoomClientInternal(
     private val context: Context,
-    private val device: BluetoothDevice,
+    private val deviceInfo: BluetoothDeviceInfo,
     private val reportProgress: (String) -> Unit
 ) : GattCallbackWrapper() {
     private val completableFuture = CompletableFuture<Boolean>()
@@ -77,18 +78,12 @@ private class BoomClientInternal(
 
     fun switchPower(): CompletionStage<Boolean> {
         if (boomClientState == BoomClientState.NOT_STARTED) {
-            boomClientState = BoomClientState.CONNECTING
-            val connectResult = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
-            if (connectResult != null) {
-                gatt = connectResult
-            } else {
-                reject("Failed to create Bluetooth client. Is Bluetooth LE supported on your mobile device?")
-            }
+            initializeConnection()
             completableFuture
                 .thenApply { "BOOM switched ${if (it) "on" else "off"}!" }
                 .exceptionally { it.cause?.message ?: "Unknown error." }
                 .thenApply(reportProgress)
-            timeoutTask.execute()
+            timeoutTask.start()
         }
         return completableFuture
     }
@@ -97,18 +92,21 @@ private class BoomClientInternal(
         teardown()
         // delay result for better toast timing and to reduce likelihood of issues on reconnects
         val resolveDelay = (if (completeValue) 2500 else 1000).toLong()
-        DelayedResolveTask(completableFuture, completeValue, resolveDelay).execute()
+        AsyncTask.execute {
+            Thread.sleep(resolveDelay)
+            Log.i(TAG, "Resolving future with $completeValue")
+            completableFuture.complete(completeValue)
+        }
     }
 
-    private fun reject(errorMessage: String) {
-        val exception = Exception(errorMessage)
-        Log.e(TAG, "Failed to switch power.", exception)
+    private fun reject(exception: Exception) {
+        Log.e(TAG, "Failed to switch power", exception)
         teardown()
         completableFuture.completeExceptionally(exception)
     }
 
     private fun teardown() {
-        timeoutTask.cancel(true)
+        timeoutTask.cancel()
         if (this::gatt.isInitialized) {
             gatt.close()
         }
@@ -116,13 +114,38 @@ private class BoomClientInternal(
     }
 
     private fun onTimedOut() {
-        reject(
+        val errorMessage =
             if (boomClientState == BoomClientState.CONNECTING || boomClientState == BoomClientState.CONNECTING_RETRY) {
                 "Failed to connect to speaker. Is the speaker in range?"
             } else {
                 "Timed out switching speaker's power!"
             }
-        )
+        reject(Exception(errorMessage))
+    }
+
+    private fun initializeConnection() {
+        boomClientState = BoomClientState.CONNECTING
+        val device = try {
+            getDevice()
+        } catch (e: Exception) {
+            return reject(e)
+        }
+        val connectResult = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
+        if (connectResult != null) {
+            gatt = connectResult
+        } else {
+            reject(Exception("Failed to create Bluetooth client. Is Bluetooth LE supported on your mobile device?"))
+        }
+    }
+
+    private fun getDevice(): BluetoothDevice {
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        if (bluetoothAdapter?.isEnabled != true) {
+            throw Exception("Bluetooth is disabled. Please enable Bluetooth then try again.")
+        }
+        val bondedDevices = bluetoothAdapter.bondedDevices
+        return bondedDevices.find { it.address == deviceInfo.address }
+            ?: throw Exception("Failed to find the address for '${deviceInfo.name}'. Has the speaker been unpaired?")
     }
 
     override fun onConnectionStateChange(status: Int, newState: Int) {
@@ -130,39 +153,39 @@ private class BoomClientInternal(
             when (boomClientState) {
                 BoomClientState.CONNECTING -> {
                     boomClientState = BoomClientState.CONNECTING_RETRY
-                    Log.i(TAG, "Connection attempt failed, retrying.")
+                    Log.i(TAG, "Connection attempt failed, retrying")
                     if (!gatt.connect()) {
-                        reject("Failed to retry connection.")
+                        reject(Exception("Failed to retry connection."))
                     }
                 }
-                BoomClientState.CONNECTING_RETRY -> reject("Second connection attempt failed.")
+                BoomClientState.CONNECTING_RETRY -> reject(Exception("Second connection attempt failed."))
                 BoomClientState.DISCONNECTING -> resolve()
-                else -> reject("Unexpectedly disconnected from device.")
+                else -> reject(Exception("Unexpectedly disconnected from speaker."))
             }
             return
         }
 
         boomClientState = BoomClientState.DISCOVERING_SERVICES
         if (!gatt.discoverServices()) {
-            reject("Failed to start discovering Bluetooth LE services.")
+            reject(Exception("Failed to start discovering Bluetooth LE services."))
         }
     }
 
     override fun onServicesDiscovered(status: Int) {
         if (status != BluetoothGatt.GATT_SUCCESS) {
-            return reject("Failed to discover Bluetooth LE services.")
+            return reject(Exception("Failed to discover Bluetooth LE services."))
         }
 
         boomClientState = BoomClientState.READING_STATE
         val stateCharacteristic = gatt.getService(SERVICE_UUID)?.getCharacteristic(READ_STATE_UUID)
         if (stateCharacteristic == null || !gatt.readCharacteristic(stateCharacteristic)) {
-            reject("Failed to start reading the speaker's current state. The selected speaker might not be supported.")
+            reject(Exception("Failed to start reading the speaker's current state. The selected speaker might not be supported."))
         }
     }
 
     override fun onCharacteristicRead(characteristic: BluetoothGattCharacteristic, status: Int) {
         if (status != BluetoothGatt.GATT_SUCCESS) {
-            return reject("Failed to read the speaker's current state.")
+            return reject(Exception("Failed to read the speaker's current state."))
         }
 
         boomClientState = BoomClientState.WRITING_POWER
@@ -180,12 +203,12 @@ private class BoomClientInternal(
                 return
             }
         }
-        reject("Failed to start setting the speaker's new state. The selected speaker might not be supported.")
+        reject(Exception("Failed to start setting the speaker's new state. The selected speaker might not be supported."))
     }
 
     override fun onCharacteristicWrite(characteristic: BluetoothGattCharacteristic, status: Int) {
         if (status != BluetoothGatt.GATT_SUCCESS) {
-            return reject("Failed to set the speaker's new state.")
+            return reject(Exception("Failed to set the speaker's new state."))
         }
 
         boomClientState = BoomClientState.DISCONNECTING
