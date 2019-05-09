@@ -7,6 +7,8 @@ import android.util.Log
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 private val TAG = BoomClient::class.java.simpleName
 
@@ -20,24 +22,25 @@ private const val BOOM_STANDBY = 2.toByte()
 private const val TIMEOUT = 15000.toLong()
 
 object BoomClient {
-    private val lock = Any()
+    private val lock = ReentrantLock()
     private var future: CompletionStage<Boolean>? = null
 
     fun switchPower(
         context: Context,
-        deviceInfo: BluetoothDeviceInfo,
         reportProgress: (String) -> Unit
     ): CompletionStage<Boolean> {
-        return synchronized(lock) {
+        lock.withLock {
             if (future != null) {
                 Log.i(TAG, "Already switching power, returning existing future")
             } else {
-                future = BoomClientInternal(context, deviceInfo, reportProgress).switchPower()
+                future = BoomClientInternal(context, reportProgress).switchPower()
                 future!!.whenComplete { _, _ ->
-                    synchronized(lock) { future = null }
+                    AsyncTask.execute {
+                        lock.withLock { future = null }
+                    }
                 }
             }
-            future!!
+            return future!!
         }
     }
 }
@@ -55,7 +58,6 @@ private enum class BoomClientState {
 
 private class BoomClientInternal(
     private val context: Context,
-    private val deviceInfo: BluetoothDeviceInfo,
     private val reportProgress: (String) -> Unit
 ) : GattCallbackWrapper() {
     private val completableFuture = CompletableFuture<Boolean>()
@@ -70,7 +72,6 @@ private class BoomClientInternal(
                 BoomClientState.CONNECTING -> "Connecting to speaker..."
                 BoomClientState.CONNECTING_RETRY -> "First connection attempt failed, retrying..."
                 BoomClientState.DISCOVERING_SERVICES -> "Switching speaker's power..."
-                BoomClientState.DISCONNECTING -> "Finalizing..."
                 else -> null
             }?.also(reportProgress)
             field = value
@@ -100,7 +101,7 @@ private class BoomClientInternal(
     }
 
     private fun reject(exception: Exception) {
-        Log.e(TAG, "Failed to switch power", exception)
+        Log.w(TAG, "Failed to switch power", exception)
         teardown()
         completableFuture.completeExceptionally(exception)
     }
@@ -116,7 +117,7 @@ private class BoomClientInternal(
     private fun onTimedOut() {
         val errorMessage =
             if (boomClientState == BoomClientState.CONNECTING || boomClientState == BoomClientState.CONNECTING_RETRY) {
-                "Failed to connect to speaker. Is the speaker in range?"
+                "Connection failed. Is the speaker in range?"
             } else {
                 "Timed out switching speaker's power!"
             }
@@ -139,13 +140,14 @@ private class BoomClientInternal(
     }
 
     private fun getDevice(): BluetoothDevice {
-        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        if (bluetoothAdapter?.isEnabled != true) {
-            throw Exception("Bluetooth is disabled. Please enable Bluetooth then try again.")
-        }
-        val bondedDevices = bluetoothAdapter.bondedDevices
-        return bondedDevices.find { it.address == deviceInfo.address }
-            ?: throw Exception("Failed to find the address for '${deviceInfo.name}'. Has the speaker been unpaired?")
+        val deviceInfo = Preferences.bluetoothDeviceInfo
+            ?: throw Exception("Please select your speaker in the BOOM Switch app.")
+
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()?.takeIf { it.isEnabled }
+            ?: throw Exception("Bluetooth is disabled. Please enable Bluetooth then try again.")
+
+        return bluetoothAdapter.bondedDevices.find { it.address == deviceInfo.address }
+            ?: throw Exception("Failed to find \"${deviceInfo.name}\"'s address. Has the speaker been unpaired?")
     }
 
     override fun onConnectionStateChange(status: Int, newState: Int) {
@@ -158,7 +160,6 @@ private class BoomClientInternal(
                         reject(Exception("Failed to retry connection."))
                     }
                 }
-                BoomClientState.CONNECTING_RETRY -> reject(Exception("Second connection attempt failed."))
                 BoomClientState.DISCONNECTING -> resolve()
                 else -> reject(Exception("Unexpectedly disconnected from speaker."))
             }
