@@ -34,9 +34,7 @@ class MainWidget : AppWidgetProvider() {
         if (intent.action == BOOM_SWITCH) {
             lazySetup(context)
 
-            BoomClient.switchPower(context) {
-                toaster.show(it)
-            }
+            BoomClient.switchPower(context) { toaster.show(it) }
         }
     }
 
@@ -44,7 +42,7 @@ class MainWidget : AppWidgetProvider() {
         if (!initialized) {
             Preferences.initialize(context)
             handler = Handler()
-            toaster = Toaster(context) { handler.post(it) }
+            toaster = Toaster(context, handler)
             initialized = true
         }
     }

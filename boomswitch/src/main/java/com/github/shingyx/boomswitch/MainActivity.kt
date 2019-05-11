@@ -2,6 +2,7 @@ package com.github.shingyx.boomswitch
 
 import android.bluetooth.BluetoothAdapter
 import android.os.Bundle
+import android.os.Handler
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.LayoutInflater
@@ -15,6 +16,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 private val TAG = MainActivity::class.java.simpleName
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var handler: Handler
     private lateinit var toaster: Toaster
     private lateinit var adapter: BluetoothDeviceAdapter
 
@@ -23,7 +25,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         Preferences.initialize(this)
-        toaster = Toaster(this) { runOnUiThread(it) }
+        handler = Handler()
+        toaster = Toaster(this, handler)
         adapter = BluetoothDeviceAdapter(this)
 
         // TODO add reloading
@@ -48,9 +51,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         button.setOnClickListener {
-            BoomClient.switchPower(this) {
-                runOnUiThread { toaster.show(it) }
-            }
+            button.isEnabled = false
+            BoomClient.switchPower(this) { toaster.show(it) }
+                .whenComplete { _, _ ->
+                    // time re-enabling button with toast animation
+                    handler.postDelayed({
+                        button.isEnabled = true
+                    }, 250)
+                }
         }
     }
 }
