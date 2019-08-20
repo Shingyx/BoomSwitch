@@ -1,8 +1,13 @@
 package com.github.shingyx.boomswitch
 
-import android.bluetooth.*
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothGattCallback
+import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothProfile
 import android.content.Context
-import android.os.AsyncTask
+import android.os.Handler
 import android.util.Log
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -30,17 +35,17 @@ object BoomClient {
         reportProgress: (String) -> Unit
     ): CompletionStage<Boolean> {
         lock.withLock {
-            if (future != null) {
+            var localFuture = future
+            if (localFuture != null) {
                 Log.i(TAG, "Already switching power, returning existing future")
             } else {
-                future = BoomClientInternal(context, reportProgress).switchPower()
-                future!!.whenComplete { _, _ ->
-                    AsyncTask.execute {
-                        lock.withLock { future = null }
-                    }
+                localFuture = BoomClientInternal(context, reportProgress).switchPower()
+                future = localFuture
+                localFuture.whenComplete { _, _ ->
+                    lock.withLock { future = null }
                 }
             }
-            return future!!
+            return localFuture
         }
     }
 }
@@ -60,9 +65,9 @@ private class BoomClientInternal(
     private val context: Context,
     private val reportProgress: (String) -> Unit
 ) : GattCallbackWrapper() {
+    private val handler = Handler()
     private val completableFuture = CompletableFuture<Boolean>()
     private var completeValue = false
-    private val timeoutTask = TimeoutTask(this::onTimedOut, TIMEOUT)
     private lateinit var gatt: BluetoothGatt
 
     private var boomClientState = BoomClientState.NOT_STARTED
@@ -84,20 +89,21 @@ private class BoomClientInternal(
                 .thenApply { "BOOM switched ${if (it) "on" else "off"}!" }
                 .exceptionally { it.cause?.message ?: "Unknown error." }
                 .thenApply(reportProgress)
-            timeoutTask.start()
+            handler.postDelayed(this::onTimedOut, TIMEOUT)
         }
         return completableFuture
     }
 
     private fun resolve() {
         teardown()
-        // delay result for better toast timing and to reduce likelihood of issues on reconnects
-        val resolveDelay = (if (completeValue) 2500 else 1000).toLong()
-        AsyncTask.execute {
-            Thread.sleep(resolveDelay)
+
+        // Add a delay to complete the future at the same time the speaker plays a sound
+        // and reduce the likelihood of issues on reconnect
+        val delay = if (completeValue) 2500L else 1000L
+        handler.postDelayed({
             Log.i(TAG, "Resolving future with $completeValue")
             completableFuture.complete(completeValue)
-        }
+        }, delay)
     }
 
     private fun reject(exception: Exception) {
@@ -107,7 +113,7 @@ private class BoomClientInternal(
     }
 
     private fun teardown() {
-        timeoutTask.cancel()
+        handler.removeCallbacks(this::onTimedOut)
         if (this::gatt.isInitialized) {
             gatt.close()
         }
@@ -144,7 +150,7 @@ private class BoomClientInternal(
             ?: throw Exception("Please select your speaker in the BOOM Switch app.")
 
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()?.takeIf { it.isEnabled }
-            ?: throw Exception("Bluetooth is disabled. Please enable Bluetooth then try again.")
+            ?: throw Exception("Bluetooth is turned off. Please turn on Bluetooth then try again.")
 
         return bluetoothAdapter.bondedDevices.find { it.address == deviceInfo.address }
             ?: throw Exception("Failed to find \"${deviceInfo.name}\"'s address. Has the speaker been unpaired?")
