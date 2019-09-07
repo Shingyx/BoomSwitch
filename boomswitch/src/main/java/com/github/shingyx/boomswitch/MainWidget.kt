@@ -7,13 +7,14 @@ import android.content.Context
 import android.content.Intent
 import android.os.Handler
 import android.widget.RemoteViews
+import android.widget.Toast
 
 private const val BOOM_SWITCH = "BOOM_SWITCH"
 
 class MainWidget : AppWidgetProvider() {
     private var initialized = false
     private lateinit var handler: Handler
-    private lateinit var toaster: Toaster
+    private var toast: Toast? = null
 
     override fun onUpdate(
         context: Context,
@@ -39,7 +40,9 @@ class MainWidget : AppWidgetProvider() {
         if (intent.action == BOOM_SWITCH) {
             lazySetup(context)
 
-            BoomClient.switchPower(context) { toaster.show(it) }
+            BoomClient.switchPower(context) { progressMessage ->
+                reportProgress(context, progressMessage)
+            }
         }
     }
 
@@ -47,8 +50,16 @@ class MainWidget : AppWidgetProvider() {
         if (!initialized) {
             Preferences.initialize(context)
             handler = Handler()
-            toaster = Toaster(context, handler)
             initialized = true
+        }
+    }
+
+    private fun reportProgress(context: Context, message: String) {
+        handler.post {
+            toast?.cancel()
+            toast = Toast.makeText(context, message, Toast.LENGTH_LONG).also {
+                it.show()
+            }
         }
     }
 }

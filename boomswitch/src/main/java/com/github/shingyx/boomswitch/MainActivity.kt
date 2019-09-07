@@ -1,5 +1,7 @@
 package com.github.shingyx.boomswitch
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.content.BroadcastReceiver
@@ -24,7 +26,6 @@ private val TAG = MainActivity::class.java.simpleName
 
 class MainActivity : AppCompatActivity() {
     private lateinit var handler: Handler
-    private lateinit var toaster: Toaster
     private lateinit var adapter: BluetoothDeviceAdapter
     private lateinit var bluetoothStateReceiver: BroadcastReceiver
 
@@ -41,7 +42,6 @@ class MainActivity : AppCompatActivity() {
 
         Preferences.initialize(this)
         handler = Handler()
-        toaster = Toaster(this, handler)
         adapter = BluetoothDeviceAdapter(this)
         bluetoothStateReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
@@ -58,14 +58,19 @@ class MainActivity : AppCompatActivity() {
             Preferences.bluetoothDeviceInfo = adapter.getItem(position)
         }
 
-        button.setOnClickListener {
-            button.isEnabled = false
-            BoomClient.switchPower(this) { toaster.show(it) }
+        switch_button.setOnClickListener {
+            handler.removeCallbacksAndMessages(null)
+
+            switch_button.isEnabled = false
+            fadeView(progress_bar, true)
+            progress_description.text = ""
+            fadeView(progress_description, true)
+
+            BoomClient.switchPower(this, this::reportProgress)
                 .whenComplete { _, _ ->
-                    // Delay to enable the button just as the toast appears
-                    handler.postDelayed({
-                        button.isEnabled = true
-                    }, 250)
+                    switch_button.isEnabled = true
+                    fadeView(progress_bar, false)
+                    handler.postDelayed({ fadeView(progress_description, false) }, 3000)
                 }
         }
 
@@ -83,6 +88,23 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         unregisterReceiver(bluetoothStateReceiver)
         super.onDestroy()
+    }
+
+    private fun fadeView(view: View, show: Boolean) {
+        view.animate()
+            .alpha(if (show) 1f else 0f)
+            .setDuration(resources.getInteger(android.R.integer.config_shortAnimTime).toLong())
+            .setListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator?) {
+                    view.visibility = if (show) View.VISIBLE else View.INVISIBLE
+                }
+            })
+    }
+
+    private fun reportProgress(message: String) {
+        runOnUiThread {
+            progress_description.text = message
+        }
     }
 
     private fun updateBluetoothDevices() {

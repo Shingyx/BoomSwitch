@@ -113,7 +113,7 @@ private class BoomClientInternal(
     }
 
     private fun teardown() {
-        handler.removeCallbacks(this::onTimedOut)
+        handler.removeCallbacksAndMessages(null)
         if (this::gatt.isInitialized) {
             gatt.close()
         }
