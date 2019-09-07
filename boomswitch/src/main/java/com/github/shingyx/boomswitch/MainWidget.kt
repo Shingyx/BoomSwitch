@@ -15,14 +15,19 @@ class MainWidget : AppWidgetProvider() {
     private lateinit var handler: Handler
     private lateinit var toaster: Toaster
 
-    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray
+    ) {
         for (appWidgetId in appWidgetIds) {
-            val intent = Intent(context, this.javaClass)
-            intent.action = BOOM_SWITCH
-            val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-
             val views = RemoteViews(context.packageName, R.layout.main_widget)
-            views.setOnClickPendingIntent(R.id.widgetLayout, pendingIntent)
+
+            val intent = Intent(BOOM_SWITCH, null, context, this.javaClass)
+            views.setOnClickPendingIntent(
+                R.id.widgetLayout,
+                PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            )
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }

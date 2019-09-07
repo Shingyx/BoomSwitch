@@ -24,7 +24,7 @@ private val READ_STATE_UUID = UUID.fromString("4356a21c-a599-4b94-a1c8-4b91fca02
 private const val BOOM_INACTIVE_STATE = 0.toByte()
 private const val BOOM_POWER_ON = 1.toByte()
 private const val BOOM_STANDBY = 2.toByte()
-private const val TIMEOUT = 15000.toLong()
+private const val TIMEOUT = 15000L
 
 object BoomClient {
     private val lock = ReentrantLock()

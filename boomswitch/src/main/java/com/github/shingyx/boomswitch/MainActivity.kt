@@ -1,6 +1,6 @@
 package com.github.shingyx.boomswitch
 
-import android.app.AlertDialog
+import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -8,13 +8,16 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
 import android.os.Handler
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.BaseAdapter
+import android.widget.Filter
+import android.widget.Filterable
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.android.synthetic.main.activity_main.*
 
 private val TAG = MainActivity::class.java.simpleName
@@ -26,9 +29,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bluetoothStateReceiver: BroadcastReceiver
 
     private val bluetoothOffAlertDialog by lazy {
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setMessage("Bluetooth is turned off. Please turn Bluetooth on then come back to this app.")
-            .setPositiveButton("OK", null)
+            .setPositiveButton(android.R.string.ok, null)
             .create()
     }
 
@@ -39,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         Preferences.initialize(this)
         handler = Handler()
         toaster = Toaster(this, handler)
-        adapter = BluetoothDeviceAdapter()
+        adapter = BluetoothDeviceAdapter(this)
         bluetoothStateReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 if (intent.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
@@ -48,17 +51,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        spinner.adapter = adapter
-        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                Log.v(TAG, "onNothingSelected")
-                Preferences.bluetoothDeviceInfo = null
-            }
-
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                Log.v(TAG, "onItemSelected $position")
-                Preferences.bluetoothDeviceInfo = adapter.getItem(position)
-            }
+        select_speaker.setAdapter(adapter)
+        select_speaker.setText(Preferences.bluetoothDeviceInfo.toString())
+        select_speaker.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
+            Log.v(TAG, "onItemClick $position")
+            Preferences.bluetoothDeviceInfo = adapter.getItem(position)
         }
 
         button.setOnClickListener {
@@ -72,7 +69,10 @@ class MainActivity : AppCompatActivity() {
                 }
         }
 
-        registerReceiver(bluetoothStateReceiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
+        registerReceiver(
+            bluetoothStateReceiver,
+            IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        )
     }
 
     override fun onResume() {
@@ -86,50 +86,67 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateBluetoothDevices() {
-        var devices = BluetoothAdapter.getDefaultAdapter()
+        val bondedDevices = BluetoothAdapter.getDefaultAdapter()
             ?.takeIf { it.isEnabled }
             ?.bondedDevices
-            ?.map { BluetoothDeviceInfo(it) }
-            ?.sorted()
 
-        if (devices != null) {
+        var devicesInfo = bondedDevices?.map { BluetoothDeviceInfo(it) }?.sorted()
+
+        if (devicesInfo != null) {
             bluetoothOffAlertDialog.hide()
         } else {
             bluetoothOffAlertDialog.show()
-            devices = emptyList()
+            devicesInfo = emptyList()
         }
-        // TODO reselect current device
-        adapter.updateItems(devices)
+
+        adapter.updateItems(devicesInfo)
+    }
+}
+
+private class BluetoothDeviceAdapter(
+    private val activity: Activity
+) : BaseAdapter(), Filterable {
+    private var devices = emptyList<BluetoothDeviceInfo>()
+    private val filter = NoFilter()
+
+    fun updateItems(items: List<BluetoothDeviceInfo>) {
+        devices = items
+        notifyDataSetChanged()
     }
 
-    private inner class BluetoothDeviceAdapter : BaseAdapter() {
-        private var devices = emptyList<BluetoothDeviceInfo>()
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+        val view = convertView
+            ?: activity.layoutInflater.inflate(R.layout.dropdown_menu_popup_item, parent, false)
+        (view as TextView).text = devices[position].toString()
+        return view
+    }
 
-        fun updateItems(items: List<BluetoothDeviceInfo>) {
-            devices = items
+    override fun getItem(position: Int): BluetoothDeviceInfo {
+        return devices[position]
+    }
+
+    override fun getItemId(position: Int): Long {
+        return position.toLong()
+    }
+
+    override fun getCount(): Int {
+        return devices.size
+    }
+
+    override fun getFilter(): Filter {
+        return filter
+    }
+
+    private inner class NoFilter : Filter() {
+        override fun performFiltering(constraint: CharSequence?): FilterResults {
+            return FilterResults().apply {
+                values = devices
+                count = devices.size
+            }
+        }
+
+        override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
             notifyDataSetChanged()
-        }
-
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-            val view = convertView
-                ?: layoutInflater.inflate(R.layout.spinner_bluetooth_device_info, parent, false)
-
-            val deviceInfo = devices[position]
-            view.findViewById<TextView>(R.id.device_name).text = deviceInfo.name
-            view.findViewById<TextView>(R.id.device_address).text = deviceInfo.address
-            return view
-        }
-
-        override fun getItem(position: Int): BluetoothDeviceInfo {
-            return devices[position]
-        }
-
-        override fun getItemId(position: Int): Long {
-            return position.toLong()
-        }
-
-        override fun getCount(): Int {
-            return devices.size
         }
     }
 }

@@ -1,7 +1,7 @@
 <resources>
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <item name="colorPrimary">#1E88E5</item>
-        <item name="colorSecondary">#1E88E5</item>
+        <item name="colorPrimary">#64B5F6</item>
+        <item name="colorSecondary">#64B5F6</item>
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.MaterialComponents.Dialog.Alert</item>
         <item name="android:navigationBarColor">#000</item>
     </style>
