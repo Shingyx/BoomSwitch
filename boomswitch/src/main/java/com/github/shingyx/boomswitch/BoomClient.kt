@@ -147,7 +147,7 @@ private class BoomClientInternal(
 
     private fun getDevice(): BluetoothDevice {
         val deviceInfo = Preferences.bluetoothDeviceInfo
-            ?: throw Exception("Please select your speaker in the BOOM Switch app.")
+            ?: throw Exception("Please select your speaker in the app.")
 
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()?.takeIf { it.isEnabled }
             ?: throw Exception("Bluetooth is turned off. Please turn on Bluetooth then try again.")

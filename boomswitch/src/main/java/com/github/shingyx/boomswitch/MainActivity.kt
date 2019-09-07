@@ -52,10 +52,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         select_speaker.setAdapter(adapter)
-        select_speaker.setText(Preferences.bluetoothDeviceInfo.toString())
         select_speaker.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
             Log.v(TAG, "onItemClick $position")
             Preferences.bluetoothDeviceInfo = adapter.getItem(position)
+        }
+
+        val savedDevice = Preferences.bluetoothDeviceInfo
+        if (savedDevice != null) {
+            select_speaker.setText(savedDevice.toString())
         }
 
         switch_button.setOnClickListener {
@@ -112,13 +116,18 @@ class MainActivity : AppCompatActivity() {
             ?.takeIf { it.isEnabled }
             ?.bondedDevices
 
-        var devicesInfo = bondedDevices?.map { BluetoothDeviceInfo(it) }?.sorted()
-
-        if (devicesInfo != null) {
+        val devicesInfo = if (bondedDevices != null) {
             bluetoothOffAlertDialog.hide()
+            bondedDevices.map { BluetoothDeviceInfo(it) }.sorted()
         } else {
             bluetoothOffAlertDialog.show()
-            devicesInfo = emptyList()
+            emptyList()
+        }
+
+        select_speaker_container.error = if (devicesInfo.isEmpty()) {
+            "No paired Bluetooth devices found!"
+        } else {
+            null
         }
 
         adapter.updateItems(devicesInfo)
