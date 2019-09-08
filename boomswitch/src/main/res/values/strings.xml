@@ -1,3 +1,24 @@
 <resources>
     <string name="app_name">BOOM Switch</string>
+
+    <string name="boom_speaker">BOOM Speaker</string>
+    <string name="switch_text">Switch</string>
+    <string name="no_devices_found">No paired Bluetooth devices found!</string>
+    <string name="bluetooth_turned_off_alert">Bluetooth is turned off. Please turn Bluetooth on then come back to the app.</string>
+
+    <string name="connecting_to_speaker">Connecting to speaker…</string>
+    <string name="retry_connecting_to_speaker">First connection attempt failed, retrying…</string>
+    <string name="switching_speakers_power">Switching speaker\'s power…</string>
+    <string name="boom_switched_on">BOOM switched on!</string>
+    <string name="boom_switched_off">BOOM switched off!</string>
+
+    <string name="error_unknown">Unknown error.</string>
+    <string name="error_no_speaker_selected">Please select your speaker in the app.</string>
+    <string name="error_bluetooth_disabled">Bluetooth is turned off. Please turn Bluetooth on then try again.</string>
+    <string name="error_speaker_unpaired">Could not find %1$s. Has it been unpaired?</string>
+    <string name="error_null_bluetooth_client">Connection failed. Bluetooth LE might not be supported on your device.</string>
+    <string name="error_switching_power_failed">Failed to switch the speaker\'s power. It might not be supported.</string>
+    <string name="error_unexpected_disconnect">Unexpectedly disconnected from speaker.</string>
+    <string name="error_connection_failed">Connection failed. Is the speaker in range?</string>
+    <string name="error_timed_out">Timed out switching the speaker\'s power.</string>
 </resources>

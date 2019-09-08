@@ -1,4 +1,4 @@
-package com.github.shingyx.boomswitch
+package com.github.shingyx.boomswitch.ui
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -8,6 +8,9 @@ import android.content.Intent
 import android.os.Handler
 import android.widget.RemoteViews
 import android.widget.Toast
+import com.github.shingyx.boomswitch.data.BoomClient
+import com.github.shingyx.boomswitch.data.Preferences
+import com.github.shingyx.boomswitch.R
 
 private const val BOOM_SWITCH = "BOOM_SWITCH"
 

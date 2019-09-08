@@ -1,14 +1,15 @@
-package com.github.shingyx.boomswitch
+package com.github.shingyx.boomswitch.data
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.os.Handler
 import android.util.Log
+import androidx.annotation.StringRes
+import com.github.shingyx.boomswitch.R
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
@@ -67,29 +68,25 @@ private class BoomClientInternal(
 ) : GattCallbackWrapper() {
     private val handler = Handler()
     private val completableFuture = CompletableFuture<Boolean>()
-    private var completeValue = false
+    private var switchingOn = false
     private lateinit var gatt: BluetoothGatt
 
     private var boomClientState = BoomClientState.NOT_STARTED
         set(value) {
             Log.i(TAG, "Setting boom client state to $value")
             when (value) {
-                BoomClientState.CONNECTING -> "Connecting to speaker..."
-                BoomClientState.CONNECTING_RETRY -> "First connection attempt failed, retrying..."
-                BoomClientState.DISCOVERING_SERVICES -> "Switching speaker's power..."
+                BoomClientState.CONNECTING -> R.string.connecting_to_speaker
+                BoomClientState.CONNECTING_RETRY -> R.string.retry_connecting_to_speaker
+                BoomClientState.DISCOVERING_SERVICES -> R.string.switching_speakers_power
                 else -> null
-            }?.also(reportProgress)
+            }?.let { reportProgress(context.getString(it)) }
             field = value
         }
 
     fun switchPower(): CompletionStage<Boolean> {
         if (boomClientState == BoomClientState.NOT_STARTED) {
-            initializeConnection()
-            completableFuture
-                .thenApply { "BOOM switched ${if (it) "on" else "off"}!" }
-                .exceptionally { it.cause?.message ?: "Unknown error." }
-                .thenApply(reportProgress)
             handler.postDelayed(this::onTimedOut, TIMEOUT)
+            initializeConnection()
         }
         return completableFuture
     }
@@ -99,16 +96,20 @@ private class BoomClientInternal(
 
         // Add a delay to complete the future at the same time the speaker plays a sound
         // and reduce the likelihood of issues on reconnect
-        val delay = if (completeValue) 2500L else 1000L
+        val delay = if (switchingOn) 2500L else 1000L
         handler.postDelayed({
-            Log.i(TAG, "Resolving future with $completeValue")
-            completableFuture.complete(completeValue)
+            Log.i(TAG, "Resolving future with $switchingOn")
+            val resId = if (switchingOn) R.string.boom_switched_on else R.string.boom_switched_off
+            reportProgress(context.getString(resId))
+            completableFuture.complete(switchingOn)
         }, delay)
     }
 
-    private fun reject(exception: Exception) {
+    private fun reject(message: String, @StringRes resId: Int, vararg formatArgs: String) {
+        val exception = Exception(message)
         Log.w(TAG, "Failed to switch power", exception)
         teardown()
+        reportProgress(context.getString(resId, formatArgs))
         completableFuture.completeExceptionally(exception)
     }
 
@@ -121,39 +122,34 @@ private class BoomClientInternal(
     }
 
     private fun onTimedOut() {
-        val errorMessage =
+        val resId =
             if (boomClientState == BoomClientState.CONNECTING || boomClientState == BoomClientState.CONNECTING_RETRY) {
-                "Connection failed. Is the speaker in range?"
+                R.string.error_connection_failed
             } else {
-                "Timed out switching speaker's power!"
+                R.string.error_timed_out
             }
-        reject(Exception(errorMessage))
+        reject("Timed out in state $boomClientState", resId)
     }
 
     private fun initializeConnection() {
         boomClientState = BoomClientState.CONNECTING
-        val device = try {
-            getDevice()
-        } catch (e: Exception) {
-            return reject(e)
-        }
-        val connectResult = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
+
+        val deviceInfo = Preferences.bluetoothDeviceInfo
+            ?: return reject("No speaker selected", R.string.error_no_speaker_selected)
+
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()?.takeIf { it.isEnabled }
+            ?: return reject("Bluetooth disabled", R.string.error_bluetooth_disabled)
+
+        val device = bluetoothAdapter.bondedDevices.find { it.address == deviceInfo.address }
+            ?: return reject("Speaker not paired", R.string.error_speaker_unpaired, deviceInfo.name)
+
+        val connectResult =
+            device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
         if (connectResult != null) {
             gatt = connectResult
         } else {
-            reject(Exception("Failed to create Bluetooth client. Is Bluetooth LE supported on your mobile device?"))
+            reject("Bluetooth client is null", R.string.error_null_bluetooth_client)
         }
-    }
-
-    private fun getDevice(): BluetoothDevice {
-        val deviceInfo = Preferences.bluetoothDeviceInfo
-            ?: throw Exception("Please select your speaker in the app.")
-
-        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()?.takeIf { it.isEnabled }
-            ?: throw Exception("Bluetooth is turned off. Please turn on Bluetooth then try again.")
-
-        return bluetoothAdapter.bondedDevices.find { it.address == deviceInfo.address }
-            ?: throw Exception("Failed to find \"${deviceInfo.name}\"'s address. Has the speaker been unpaired?")
     }
 
     override fun onConnectionStateChange(status: Int, newState: Int) {
@@ -163,44 +159,46 @@ private class BoomClientInternal(
                     boomClientState = BoomClientState.CONNECTING_RETRY
                     Log.i(TAG, "Connection attempt failed, retrying")
                     if (!gatt.connect()) {
-                        reject(Exception("Failed to retry connection."))
+                        reject("Retry connection failed", R.string.error_connection_failed)
                     }
                 }
                 BoomClientState.DISCONNECTING -> resolve()
-                else -> reject(Exception("Unexpectedly disconnected from speaker."))
+                else -> reject("Unexpected disconnect", R.string.error_unexpected_disconnect)
             }
             return
         }
 
         boomClientState = BoomClientState.DISCOVERING_SERVICES
         if (!gatt.discoverServices()) {
-            reject(Exception("Failed to start discovering Bluetooth LE services."))
+            reject("discoverServices failed", R.string.error_switching_power_failed)
         }
     }
 
     override fun onServicesDiscovered(status: Int) {
         if (status != BluetoothGatt.GATT_SUCCESS) {
-            return reject(Exception("Failed to discover Bluetooth LE services."))
+            reject("onServicesDiscovered status is $status", R.string.error_switching_power_failed)
+            return
         }
 
         boomClientState = BoomClientState.READING_STATE
         val stateCharacteristic = gatt.getService(SERVICE_UUID)?.getCharacteristic(READ_STATE_UUID)
         if (stateCharacteristic == null || !gatt.readCharacteristic(stateCharacteristic)) {
-            reject(Exception("Failed to start reading the speaker's current state. The selected speaker might not be supported."))
+            reject("readCharacteristic failed", R.string.error_switching_power_failed)
         }
     }
 
     override fun onCharacteristicRead(characteristic: BluetoothGattCharacteristic, status: Int) {
         if (status != BluetoothGatt.GATT_SUCCESS) {
-            return reject(Exception("Failed to read the speaker's current state."))
+            reject("onCharacteristicRead status is $status", R.string.error_switching_power_failed)
+            return
         }
 
         boomClientState = BoomClientState.WRITING_POWER
         val powerCharacteristic = gatt.getService(SERVICE_UUID)?.getCharacteristic(WRITE_POWER_UUID)
         if (powerCharacteristic != null) {
             val message = ByteArray(7)
-            completeValue = characteristic.value[0] == BOOM_INACTIVE_STATE
-            message[6] = if (completeValue) {
+            switchingOn = characteristic.value[0] == BOOM_INACTIVE_STATE
+            message[6] = if (switchingOn) {
                 BOOM_POWER_ON
             } else {
                 BOOM_STANDBY
@@ -210,44 +208,17 @@ private class BoomClientInternal(
                 return
             }
         }
-        reject(Exception("Failed to start setting the speaker's new state. The selected speaker might not be supported."))
+
+        reject("writeCharacteristic failed", R.string.error_switching_power_failed)
     }
 
     override fun onCharacteristicWrite(characteristic: BluetoothGattCharacteristic, status: Int) {
         if (status != BluetoothGatt.GATT_SUCCESS) {
-            return reject(Exception("Failed to set the speaker's new state."))
+            reject("onCharacteristicWrite status is $status", R.string.error_switching_power_failed)
+            return
         }
 
         boomClientState = BoomClientState.DISCONNECTING
         gatt.disconnect()
     }
-}
-
-private abstract class GattCallbackWrapper {
-    protected val gattCallback = object : BluetoothGattCallback() {
-        override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            Log.v(TAG, "onConnectionStateChange: $status, $newState")
-            onConnectionStateChange(status, newState)
-        }
-
-        override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-            Log.v(TAG, "onServicesDiscovered: $status")
-            onServicesDiscovered(status)
-        }
-
-        override fun onCharacteristicRead(gatt: BluetoothGatt, char: BluetoothGattCharacteristic, status: Int) {
-            Log.v(TAG, "onCharacteristicRead: $status, ${char.uuid} = [${char.value?.joinToString()}]")
-            onCharacteristicRead(char, status)
-        }
-
-        override fun onCharacteristicWrite(gatt: BluetoothGatt, char: BluetoothGattCharacteristic, status: Int) {
-            Log.v(TAG, "onCharacteristicWrite: $status, ${char.uuid} = [${char.value?.joinToString()}]")
-            onCharacteristicWrite(char, status)
-        }
-    }
-
-    protected abstract fun onConnectionStateChange(status: Int, newState: Int)
-    protected abstract fun onServicesDiscovered(status: Int)
-    protected abstract fun onCharacteristicRead(characteristic: BluetoothGattCharacteristic, status: Int)
-    protected abstract fun onCharacteristicWrite(characteristic: BluetoothGattCharacteristic, status: Int)
 }

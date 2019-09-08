@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="32dp"
-    tools:context=".MainActivity">
+    tools:context=".ui.MainActivity">
 
     <LinearLayout
         android:id="@+id/control_layout"
@@ -24,7 +24,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="32dp"
             android:layout_marginRight="32dp"
-            android:hint="BOOM Speaker">
+            android:hint="@string/boom_speaker">
 
             <AutoCompleteTextView
                 android:id="@+id/select_speaker"
@@ -42,7 +42,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="16dp"
-            android:text="Switch"
+            android:text="@string/switch_text"
             android:textAppearance="?attr/textAppearanceButton" />
 
     </LinearLayout>

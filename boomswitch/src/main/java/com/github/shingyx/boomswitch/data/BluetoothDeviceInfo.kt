@@ -1,4 +1,4 @@
-package com.github.shingyx.boomswitch
+package com.github.shingyx.boomswitch.data
 
 import android.bluetooth.BluetoothDevice
 
