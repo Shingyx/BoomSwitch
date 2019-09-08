@@ -31,7 +31,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:editable="false"
-                tools:ignore="Deprecated,LabelFor" />
+                tools:ignore="Deprecated,LabelFor"
+                tools:text="My BOOM" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
