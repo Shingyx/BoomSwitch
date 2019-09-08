@@ -143,13 +143,8 @@ private class BoomClientInternal(
         val device = bluetoothAdapter.bondedDevices.find { it.address == deviceInfo.address }
             ?: return reject("Speaker not paired", R.string.error_speaker_unpaired, deviceInfo.name)
 
-        val connectResult =
-            device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
-        if (connectResult != null) {
-            gatt = connectResult
-        } else {
-            reject("Bluetooth client is null", R.string.error_null_bluetooth_client)
-        }
+        gatt = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
+            ?: return reject("connectGatt returned null", R.string.error_null_bluetooth_client)
     }
 
     override fun onConnectionStateChange(status: Int, newState: Int) {
