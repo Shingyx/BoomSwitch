@@ -80,11 +80,13 @@ class MainActivity : AppCompatActivity() {
 
         BoomClient.switchPower(this, this::reportProgress)
             .whenComplete { _, _ ->
-                switch_button.isEnabled = true
-                fadeView(progress_bar, false)
+                runOnUiThread {
+                    switch_button.isEnabled = true
+                    fadeView(progress_bar, false)
+                }
                 handler.postDelayed({
                     fadeView(progress_description, false)
-                }, 5000)
+                }, 4000)
             }
     }
 
