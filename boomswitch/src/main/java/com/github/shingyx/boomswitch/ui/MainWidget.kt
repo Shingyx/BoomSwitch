@@ -29,7 +29,7 @@ class MainWidget : AppWidgetProvider() {
 
             val intent = Intent(BOOM_SWITCH, null, context, this.javaClass)
             views.setOnClickPendingIntent(
-                R.id.widgetLayout,
+                R.id.icon,
                 PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
             )
 
