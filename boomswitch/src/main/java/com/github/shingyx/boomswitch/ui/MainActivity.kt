@@ -11,17 +11,18 @@ import android.os.Bundle
 import android.os.Handler
 import android.view.View
 import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
+import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.BluetoothDeviceInfo
 import com.github.shingyx.boomswitch.data.BoomClient
 import com.github.shingyx.boomswitch.data.Preferences
-import com.github.shingyx.boomswitch.R
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
     private lateinit var handler: Handler
-    private lateinit var adapter: BluetoothDeviceAdapter
+    private lateinit var adapter: ArrayAdapter<BluetoothDeviceInfo>
     private lateinit var bluetoothStateReceiver: BroadcastReceiver
 
     private val bluetoothOffAlertDialog by lazy {
@@ -35,9 +36,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        Preferences.initialize(this)
         handler = Handler()
-        adapter = BluetoothDeviceAdapter(this)
+        adapter = ArrayAdapter(this, R.layout.dropdown_menu_popup_item, ArrayList())
         bluetoothStateReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 if (intent.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
         select_speaker.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
             Preferences.bluetoothDeviceInfo = adapter.getItem(position)
         }
-        select_speaker.setText(Preferences.bluetoothDeviceInfo?.toString())
+        select_speaker.setText(Preferences.bluetoothDeviceInfo?.toString(), false)
 
         switch_button.setOnClickListener { switchPower() }
 
@@ -132,6 +132,7 @@ class MainActivity : AppCompatActivity() {
             null
         }
 
-        adapter.updateItems(devicesInfo)
+        adapter.clear()
+        adapter.addAll(devicesInfo)
     }
 }

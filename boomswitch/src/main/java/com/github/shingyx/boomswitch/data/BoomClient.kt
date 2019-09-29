@@ -16,8 +16,6 @@ import java.util.concurrent.CompletionStage
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-private val TAG = BoomClient::class.java.simpleName
-
 private val SERVICE_UUID = UUID.fromString("000061fe-0000-1000-8000-00805f9b34fb")
 private val WRITE_POWER_UUID = UUID.fromString("c6d6dc0d-07f5-47ef-9b59-630622b01fd3")
 private val READ_STATE_UUID = UUID.fromString("4356a21c-a599-4b94-a1c8-4b91fca02a9a")
@@ -28,6 +26,8 @@ private const val BOOM_STANDBY = 2.toByte()
 private const val TIMEOUT = 15000L
 
 object BoomClient {
+    private val tag = javaClass.simpleName
+
     private val lock = ReentrantLock()
     private var future: CompletionStage<Boolean>? = null
 
@@ -38,7 +38,7 @@ object BoomClient {
         lock.withLock {
             var localFuture = future
             if (localFuture != null) {
-                Log.i(TAG, "Already switching power, returning existing future")
+                Log.i(tag, "Already switching power, returning existing future")
             } else {
                 localFuture = BoomClientInternal(context, reportProgress).switchPower()
                 future = localFuture
@@ -66,6 +66,8 @@ private class BoomClientInternal(
     private val context: Context,
     private val reportProgress: (String) -> Unit
 ) : GattCallbackWrapper() {
+    override val tag = javaClass.simpleName
+
     private val handler = Handler()
     private val completableFuture = CompletableFuture<Boolean>()
     private var switchingOn = false
@@ -73,7 +75,7 @@ private class BoomClientInternal(
 
     private var boomClientState = BoomClientState.NOT_STARTED
         set(value) {
-            Log.i(TAG, "Setting boom client state to $value")
+            Log.i(tag, "Setting boom client state to $value")
             when (value) {
                 BoomClientState.CONNECTING -> R.string.connecting_to_speaker
                 BoomClientState.CONNECTING_RETRY -> R.string.retry_connecting_to_speaker
@@ -98,7 +100,7 @@ private class BoomClientInternal(
         // and reduce the likelihood of issues on reconnect
         val delay = if (switchingOn) 2500L else 1000L
         handler.postDelayed({
-            Log.i(TAG, "Resolving future with $switchingOn")
+            Log.i(tag, "Resolving future with $switchingOn")
             val resId = if (switchingOn) R.string.boom_switched_on else R.string.boom_switched_off
             reportProgress(context.getString(resId))
             completableFuture.complete(switchingOn)
@@ -107,7 +109,7 @@ private class BoomClientInternal(
 
     private fun reject(message: String, @StringRes resId: Int, vararg formatArgs: String) {
         val exception = Exception(message)
-        Log.w(TAG, "Failed to switch power", exception)
+        Log.w(tag, "Failed to switch power", exception)
         teardown()
         reportProgress(context.getString(resId, formatArgs))
         completableFuture.completeExceptionally(exception)
@@ -152,7 +154,7 @@ private class BoomClientInternal(
             when (boomClientState) {
                 BoomClientState.CONNECTING -> {
                     boomClientState = BoomClientState.CONNECTING_RETRY
-                    Log.i(TAG, "Connection attempt failed, retrying")
+                    Log.i(tag, "Connection attempt failed, retrying")
                     if (!gatt.connect()) {
                         reject("Retry connection failed", R.string.error_connection_failed)
                     }

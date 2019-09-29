@@ -5,27 +5,27 @@ import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.util.Log
 
-private val TAG = GattCallbackWrapper::class.java.simpleName
-
 abstract class GattCallbackWrapper {
+    protected abstract val tag: String
+
     protected val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            Log.v(TAG, "onConnectionStateChange: $status, $newState")
+            Log.v(tag, "onConnectionStateChange: $status, $newState")
             onConnectionStateChange(status, newState)
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-            Log.v(TAG, "onServicesDiscovered: $status")
+            Log.v(tag, "onServicesDiscovered: $status")
             onServicesDiscovered(status)
         }
 
         override fun onCharacteristicRead(gatt: BluetoothGatt, char: BluetoothGattCharacteristic, status: Int) {
-            Log.v(TAG, "onCharacteristicRead: $status, ${char.uuid} = [${char.value?.joinToString()}]")
+            Log.v(tag, "onCharacteristicRead: $status, ${char.uuid} = [${char.value?.joinToString()}]")
             onCharacteristicRead(char, status)
         }
 
         override fun onCharacteristicWrite(gatt: BluetoothGatt, char: BluetoothGattCharacteristic, status: Int) {
-            Log.v(TAG, "onCharacteristicWrite: $status, ${char.uuid} = [${char.value?.joinToString()}]")
+            Log.v(tag, "onCharacteristicWrite: $status, ${char.uuid} = [${char.value?.joinToString()}]")
             onCharacteristicWrite(char, status)
         }
     }
