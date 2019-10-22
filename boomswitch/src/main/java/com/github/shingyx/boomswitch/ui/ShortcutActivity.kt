@@ -31,7 +31,7 @@ class ShortcutActivity : AppCompatActivity() {
     private fun createShortcut() {
         val shortcutIntent = Intent(ACTION_BOOM_SWITCH, null, this, javaClass)
         val iconResource = Intent.ShortcutIconResource.fromContext(this, R.mipmap.ic_launcher_round)
-        @Suppress("DEPRECATION") // Currently, the deprecated approach has a more consistent style
+        @Suppress("DEPRECATION") // Use deprecated approach for no icon badge
         val intent = Intent().apply {
             putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent)
             putExtra(Intent.EXTRA_SHORTCUT_NAME, getString(R.string.app_name))
