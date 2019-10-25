@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: ArrayAdapter<BluetoothDeviceInfo>
     private lateinit var bluetoothStateReceiver: BroadcastReceiver
 
-    private val bluetoothOffAlertDialog by lazy {
+    private val bluetoothOffAlertDialog = lazy {
         MaterialAlertDialogBuilder(this)
             .setMessage(R.string.bluetooth_turned_off_alert)
             .setPositiveButton(android.R.string.ok, null)
@@ -119,10 +119,12 @@ class MainActivity : AppCompatActivity() {
             ?.bondedDevices
 
         val devicesInfo = if (bondedDevices != null) {
-            bluetoothOffAlertDialog.hide()
+            if (bluetoothOffAlertDialog.isInitialized()) {
+                bluetoothOffAlertDialog.value.hide()
+            }
             bondedDevices.map { BluetoothDeviceInfo(it) }.sorted()
         } else {
-            bluetoothOffAlertDialog.show()
+            bluetoothOffAlertDialog.value.show()
             emptyList()
         }
 
