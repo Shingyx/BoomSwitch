@@ -91,18 +91,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun fadeView(view: View, show: Boolean) {
-        if (show) {
-            view.alpha = 0f
-            view.visibility = View.VISIBLE
-        }
+        val newAlpha = if (show) 1f else 0f
+        view.visibility = View.VISIBLE
+        view.alpha = 1f - newAlpha
         view.animate()
-            .alpha(if (show) 1f else 0f)
             .setDuration(resources.getInteger(android.R.integer.config_shortAnimTime).toLong())
+            .alpha(newAlpha)
             .setListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator?) {
-                    if (!show) {
-                        view.visibility = View.GONE
-                    }
+                    view.visibility = if (show) View.VISIBLE else View.GONE
                 }
             })
     }
