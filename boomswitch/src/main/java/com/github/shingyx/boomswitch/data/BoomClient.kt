@@ -10,11 +10,8 @@ import android.os.Handler
 import android.util.Log
 import androidx.annotation.StringRes
 import com.github.shingyx.boomswitch.R
+import kotlinx.coroutines.CompletableDeferred
 import java.util.*
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CompletionStage
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 private val SERVICE_UUID = UUID.fromString("000061fe-0000-1000-8000-00805f9b34fb")
 private val WRITE_POWER_UUID = UUID.fromString("c6d6dc0d-07f5-47ef-9b59-630622b01fd3")
@@ -28,26 +25,22 @@ private const val TIMEOUT = 15000L
 object BoomClient {
     private val tag = javaClass.simpleName
 
-    private val lock = ReentrantLock()
-    private var future: CompletionStage<Boolean>? = null
+    @Volatile
+    private var inProgress = false
 
-    fun switchPower(
+    suspend fun switchPower(
         context: Context,
         reportProgress: (String) -> Unit
-    ): CompletionStage<Boolean> {
-        lock.withLock {
-            var localFuture = future
-            if (localFuture != null) {
-                Log.i(tag, "Already switching power, returning existing future")
-            } else {
-                localFuture = BoomClientInternal(context, reportProgress).switchPower()
-                future = localFuture
-                localFuture.whenComplete { _, _ ->
-                    lock.withLock { future = null }
-                }
-            }
-            return localFuture
+    ) {
+        if (inProgress) {
+            Log.w(tag, "Switching already in progress")
+            reportProgress(context.getString(R.string.error_switching_already_in_progress))
+            return
         }
+
+        inProgress = true
+        BoomClientInternal(context, reportProgress).switchPower()
+        inProgress = false
     }
 }
 
@@ -69,7 +62,7 @@ private class BoomClientInternal(
     override val tag = javaClass.simpleName
 
     private val handler = Handler()
-    private val completableFuture = CompletableFuture<Boolean>()
+    private val deferred = CompletableDeferred<Unit>()
     private var switchingOn = false
     private lateinit var gatt: BluetoothGatt
 
@@ -85,25 +78,25 @@ private class BoomClientInternal(
             field = value
         }
 
-    fun switchPower(): CompletionStage<Boolean> {
+    suspend fun switchPower() {
         if (boomClientState == BoomClientState.NOT_STARTED) {
             handler.postDelayed(this::onTimedOut, TIMEOUT)
             initializeConnection()
         }
-        return completableFuture
+        return deferred.await()
     }
 
     private fun resolve() {
         teardown()
 
-        // Add a delay to complete the future at the same time the speaker plays a sound
+        // Add a delay to complete the deferred at the same time the speaker plays a sound
         // and reduce the likelihood of issues on reconnect
         val delay = if (switchingOn) 2500L else 1000L
         handler.postDelayed({
-            Log.i(tag, "Resolving future with $switchingOn")
+            Log.i(tag, "Resolving deferred with $switchingOn")
             val resId = if (switchingOn) R.string.boom_switched_on else R.string.boom_switched_off
             reportProgress(context.getString(resId))
-            completableFuture.complete(switchingOn)
+            deferred.complete(Unit)
         }, delay)
     }
 
@@ -112,7 +105,7 @@ private class BoomClientInternal(
         Log.w(tag, "Failed to switch power", exception)
         teardown()
         reportProgress(context.getString(resId, formatArgs))
-        completableFuture.completeExceptionally(exception)
+        deferred.complete(Unit)
     }
 
     private fun teardown() {

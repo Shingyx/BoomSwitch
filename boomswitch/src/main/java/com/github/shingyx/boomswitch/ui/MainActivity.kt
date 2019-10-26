@@ -19,8 +19,11 @@ import com.github.shingyx.boomswitch.data.BoomClient
 import com.github.shingyx.boomswitch.data.Preferences
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     private lateinit var handler: Handler
     private lateinit var adapter: ArrayAdapter<BluetoothDeviceInfo>
     private lateinit var bluetoothStateReceiver: BroadcastReceiver
@@ -52,7 +55,7 @@ class MainActivity : AppCompatActivity() {
         }
         select_speaker.setText(Preferences.bluetoothDeviceInfo?.toString(), false)
 
-        switch_button.setOnClickListener { switchPower() }
+        switch_button.setOnClickListener { launch { switchBoom() } }
 
         registerReceiver(
             bluetoothStateReceiver,
@@ -70,7 +73,7 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    private fun switchPower() {
+    private suspend fun switchBoom() {
         handler.removeCallbacksAndMessages(null)
 
         switch_button.isEnabled = false
@@ -78,16 +81,17 @@ class MainActivity : AppCompatActivity() {
         progress_description.text = ""
         fadeView(progress_description, true)
 
-        BoomClient.switchPower(this, this::reportProgress)
-            .whenComplete { _, _ ->
-                runOnUiThread {
-                    switch_button.isEnabled = true
-                    fadeView(progress_bar, false)
-                }
-                handler.postDelayed({
-                    fadeView(progress_description, false)
-                }, 4000)
+        BoomClient.switchPower(this) { progressMessage ->
+            runOnUiThread {
+                progress_description.text = progressMessage
             }
+        }
+
+        switch_button.isEnabled = true
+        fadeView(progress_bar, false)
+        handler.postDelayed({
+            fadeView(progress_description, false)
+        }, 4000)
     }
 
     private fun fadeView(view: View, show: Boolean) {
@@ -102,12 +106,6 @@ class MainActivity : AppCompatActivity() {
                     view.visibility = if (show) View.VISIBLE else View.GONE
                 }
             })
-    }
-
-    private fun reportProgress(message: String) {
-        runOnUiThread {
-            progress_description.text = message
-        }
     }
 
     private fun updateBluetoothDevices() {

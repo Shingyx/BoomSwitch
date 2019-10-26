@@ -8,12 +8,15 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.BoomClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 
 private const val ACTION_BOOM_SWITCH = "ACTION_BOOM_SWITCH"
 
 private var toast: Toast? = null
 
-class ShortcutActivity : AppCompatActivity() {
+class ShortcutActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     private val tag = javaClass.simpleName
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,7 +24,7 @@ class ShortcutActivity : AppCompatActivity() {
 
         when (intent.action) {
             Intent.ACTION_CREATE_SHORTCUT -> createShortcut()
-            ACTION_BOOM_SWITCH -> switchBoom()
+            ACTION_BOOM_SWITCH -> launch { switchBoom() }
             else -> Log.w(tag, "Unknown intent action ${intent.action}")
         }
 
@@ -40,7 +43,7 @@ class ShortcutActivity : AppCompatActivity() {
         setResult(Activity.RESULT_OK, intent)
     }
 
-    private fun switchBoom() {
+    private suspend fun switchBoom() {
         BoomClient.switchPower(this) { progressMessage ->
             runOnUiThread {
                 toast?.cancel()

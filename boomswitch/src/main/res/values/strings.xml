@@ -20,4 +20,5 @@
     <string name="error_unexpected_disconnect">Unexpectedly disconnected from speaker.</string>
     <string name="error_connection_failed">Connection failed. Is the speaker in range?</string>
     <string name="error_timed_out">Timed out switching the speaker\'s power.</string>
+    <string name="error_switching_already_in_progress">Switching already in progress</string>
 </resources>
