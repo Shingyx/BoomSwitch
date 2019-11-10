@@ -12,7 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
-private const val ACTION_BOOM_SWITCH = "ACTION_BOOM_SWITCH"
+private const val ACTION_SWITCH = "com.github.shingyx.boomswitch.SWITCH"
 
 private var toast: Toast? = null
 
@@ -24,7 +24,7 @@ class ShortcutActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
         when (intent.action) {
             Intent.ACTION_CREATE_SHORTCUT -> createShortcut()
-            ACTION_BOOM_SWITCH -> launch { switchBoom() }
+            ACTION_SWITCH -> launch { switchBoom() }
             else -> Log.w(tag, "Unknown intent action ${intent.action}")
         }
 
@@ -32,7 +32,7 @@ class ShortcutActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     }
 
     private fun createShortcut() {
-        val shortcutIntent = Intent(ACTION_BOOM_SWITCH, null, this, javaClass)
+        val shortcutIntent = Intent(ACTION_SWITCH, null, this, javaClass)
         val iconResource = Intent.ShortcutIconResource.fromContext(this, R.mipmap.ic_launcher)
         @Suppress("DEPRECATION") // Use deprecated approach for no icon badge
         val intent = Intent().apply {
