@@ -104,7 +104,7 @@ private class BoomClientInternal(
         val exception = Exception(message)
         Log.w(tag, "Failed to switch power", exception)
         teardown()
-        reportProgress(context.getString(resId, formatArgs))
+        reportProgress(context.getString(resId, *formatArgs))
         deferred.complete(Unit)
     }
 
