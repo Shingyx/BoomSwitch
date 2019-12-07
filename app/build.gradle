@@ -2,7 +2,23 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+try {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+} catch (FileNotFoundException ignored) {
+    logger.warn('keystore.properties not found')
+}
+
 android {
+    signingConfigs {
+        release {
+            storeFile rootProject.file(keystoreProperties['storeFile'] ?: "default.jks")
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+        }
+    }
     compileSdkVersion 29
     defaultConfig {
         applicationId "com.github.shingyx.boomswitch"
@@ -12,9 +28,13 @@ android {
         versionName "1.0"
     }
     buildTypes {
+        debug {
+            applicationIdSuffix ".dev"
+        }
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+            signingConfig signingConfigs.release
         }
     }
 }

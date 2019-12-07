@@ -1,0 +1,31 @@
+language: android
+jdk: openjdk8
+
+android:
+  components:
+    - tools
+  licenses:
+    - android-sdk-license-.+
+
+before_install:
+  - chmod +x gradlew
+
+before_script:
+  # Suppress output to keep log under Travis limit
+  - echo yes | ${ANDROID_HOME}/tools/bin/sdkmanager "tools" > /dev/null
+  - echo yes | ${ANDROID_HOME}/tools/bin/sdkmanager "platform-tools" > /dev/null
+
+script: ./gradlew build
+
+before_cache:
+  - rm -f  ${HOME}/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr ${HOME}/.gradle/caches/*/plugin-resolution/
+
+cache:
+  directories:
+    - ${HOME}/.gradle/caches/
+    - ${HOME}/.gradle/wrapper/
+    - ${HOME}/.android/build-cache/
+
+notifications:
+  email: false
