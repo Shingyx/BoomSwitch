@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.view.View
 import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
 import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.BluetoothDeviceInfo
@@ -25,7 +24,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     private lateinit var handler: Handler
-    private lateinit var adapter: ArrayAdapter<BluetoothDeviceInfo>
+    private lateinit var adapter: BluetoothDeviceAdapter
     private lateinit var bluetoothStateReceiver: BroadcastReceiver
 
     private val bluetoothOffAlertDialog = lazy {
@@ -40,7 +39,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         setContentView(R.layout.activity_main)
 
         handler = Handler()
-        adapter = ArrayAdapter(this, R.layout.dropdown_menu_popup_item, ArrayList())
+        adapter = BluetoothDeviceAdapter(this)
         bluetoothStateReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 if (intent.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
@@ -53,7 +52,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         select_speaker.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
             Preferences.bluetoothDeviceInfo = adapter.getItem(position)
         }
-        select_speaker.setText(Preferences.bluetoothDeviceInfo?.toString(), false)
+        select_speaker.setText(Preferences.bluetoothDeviceInfo?.toString())
 
         switch_button.setOnClickListener { launch { switchBoom() } }
 
@@ -129,7 +128,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
             null
         }
 
-        adapter.clear()
-        adapter.addAll(devicesInfo)
+        adapter.updateItems(devicesInfo)
     }
 }
