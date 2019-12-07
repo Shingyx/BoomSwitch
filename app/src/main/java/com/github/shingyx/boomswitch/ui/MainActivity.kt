@@ -3,10 +3,6 @@ package com.github.shingyx.boomswitch.ui
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.bluetooth.BluetoothAdapter
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.os.Bundle
 import android.os.Handler
 import android.view.View
@@ -25,7 +21,7 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     private lateinit var handler: Handler
     private lateinit var adapter: BluetoothDeviceAdapter
-    private lateinit var bluetoothStateReceiver: BroadcastReceiver
+    private lateinit var bluetoothStateReceiver: BluetoothStateReceiver
 
     private val bluetoothOffAlertDialog = lazy {
         MaterialAlertDialogBuilder(this)
@@ -40,13 +36,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
         handler = Handler()
         adapter = BluetoothDeviceAdapter(this)
-        bluetoothStateReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                if (intent.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
-                    updateBluetoothDevices()
-                }
-            }
-        }
+        bluetoothStateReceiver = BluetoothStateReceiver(this::updateBluetoothDevices)
 
         select_speaker.setAdapter(adapter)
         select_speaker.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
@@ -56,10 +46,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
         switch_button.setOnClickListener { launch { switchBoom() } }
 
-        registerReceiver(
-            bluetoothStateReceiver,
-            IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
-        )
+        registerReceiver(bluetoothStateReceiver, BluetoothStateReceiver.intentFilter())
     }
 
     override fun onResume() {
