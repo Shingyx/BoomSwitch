@@ -46,10 +46,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         select_speaker.setAdapter(adapter)
         select_speaker.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
             Preferences.bluetoothDeviceInfo = adapter.getItem(position)
+            switch_button.isEnabled = true
         }
         select_speaker.setText(Preferences.bluetoothDeviceInfo?.toString())
         select_speaker.requestFocus()
 
+        switch_button.isEnabled = Preferences.bluetoothDeviceInfo != null
         switch_button.setOnClickListener { launch { switchBoom() } }
 
         registerReceiver(bluetoothStateReceiver, BluetoothStateReceiver.intentFilter())
