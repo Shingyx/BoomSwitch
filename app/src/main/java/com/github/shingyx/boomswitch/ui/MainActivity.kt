@@ -122,7 +122,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
         val devicesInfo = if (bondedDevices != null) {
             if (bluetoothOffAlertDialog.isInitialized()) {
-                bluetoothOffAlertDialog.value.hide()
+                bluetoothOffAlertDialog.value.dismiss()
             }
             bondedDevices.map { BluetoothDeviceInfo(it) }.sorted()
         } else {
