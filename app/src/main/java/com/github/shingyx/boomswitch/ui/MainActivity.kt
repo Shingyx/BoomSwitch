@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
             Preferences.bluetoothDeviceInfo = adapter.getItem(position)
         }
         select_speaker.setText(Preferences.bluetoothDeviceInfo?.toString())
+        select_speaker.requestFocus()
 
         switch_button.setOnClickListener { launch { switchBoom() } }
 
@@ -57,6 +58,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     override fun onResume() {
         super.onResume()
         updateBluetoothDevices()
+        select_speaker.dismissDropDown()
     }
 
     override fun onDestroy() {
