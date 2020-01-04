@@ -3,8 +3,11 @@ package com.github.shingyx.boomswitch.ui
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.bluetooth.BluetoothAdapter
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
 import androidx.appcompat.app.AppCompatActivity
@@ -12,6 +15,7 @@ import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.BluetoothDeviceInfo
 import com.github.shingyx.boomswitch.data.BoomClient
 import com.github.shingyx.boomswitch.data.Preferences
+import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
@@ -33,6 +37,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        setSupportActionBar(toolbar)
 
         handler = Handler()
         adapter = BluetoothDeviceAdapter(this)
@@ -57,6 +62,20 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     override fun onDestroy() {
         unregisterReceiver(bluetoothStateReceiver)
         super.onDestroy()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.open_source_licenses) {
+            OssLicensesMenuActivity.setActivityTitle(getString(R.string.open_source_licenses))
+            startActivity(Intent(this, OssLicensesMenuActivity::class.java))
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     private suspend fun switchBoom() {

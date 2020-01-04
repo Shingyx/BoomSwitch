@@ -15,7 +15,8 @@
 
         <activity
             android:name=".ui.MainActivity"
-            android:noHistory="true">
+            android:finishOnCloseSystemDialogs="true"
+            android:theme="@style/AppThemeNoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -29,6 +30,14 @@
                 <action android:name="android.intent.action.CREATE_SHORTCUT" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
+            android:finishOnCloseSystemDialogs="true" />
+
+        <activity
+            android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
+            android:finishOnCloseSystemDialogs="true" />
 
     </application>
 

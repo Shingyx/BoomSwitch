@@ -1,9 +1,22 @@
 <resources>
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <item name="colorPrimary">#1E88E5</item>
-        <item name="colorSecondary">#1E88E5</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorSecondary">@color/primary</item>
+        <item name="colorControlNormal">@android:color/white</item>
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.MaterialComponents.Dialog.Alert</item>
-        <item name="android:navigationBarColor">#000</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:statusBarColor">@color/toolbar_color</item>
+        <item name="android:titleTextColor">@android:color/white</item>
+        <item name="actionBarStyle">@style/ActionBarStyle</item>
+    </style>
+
+    <style name="AppThemeNoActionBar" parent="AppTheme">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="ActionBarStyle" parent="Widget.MaterialComponents.ActionBar.PrimarySurface">
+        <item name="background">@color/toolbar_color</item>
     </style>
 
     <style name="Transparent" parent="@style/Theme.AppCompat.Dialog" />
