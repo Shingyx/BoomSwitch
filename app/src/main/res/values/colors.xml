@@ -1,4 +1,5 @@
 <resources>
     <color name="primary">#1E88E5</color>
     <color name="toolbar_color">@color/primary</color>
+    <color name="navigation_bar_color">@android:color/black</color>
 </resources>
