@@ -15,7 +15,6 @@
 
         <activity
             android:name=".ui.MainActivity"
-            android:finishOnCloseSystemDialogs="true"
             android:theme="@style/AppThemeNoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,19 +24,12 @@
 
         <activity
             android:name=".ui.ShortcutActivity"
-            android:theme="@style/Transparent">
+            android:taskAffinity=".shortcut"
+            android:theme="@android:style/Theme.NoDisplay">
             <intent-filter>
                 <action android:name="android.intent.action.CREATE_SHORTCUT" />
             </intent-filter>
         </activity>
-
-        <activity
-            android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
-            android:finishOnCloseSystemDialogs="true" />
-
-        <activity
-            android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
-            android:finishOnCloseSystemDialogs="true" />
 
     </application>
 
