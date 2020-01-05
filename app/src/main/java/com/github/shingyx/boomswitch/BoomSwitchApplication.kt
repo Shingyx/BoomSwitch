@@ -7,5 +7,6 @@ class BoomSwitchApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         Preferences.initialize(this)
+        Preferences.appColorTheme.apply()
     }
 }

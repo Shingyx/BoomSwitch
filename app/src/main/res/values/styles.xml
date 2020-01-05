@@ -2,7 +2,6 @@
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorSecondary">@color/primary</item>
-        <item name="colorControlNormal">@android:color/white</item>
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.MaterialComponents.Dialog.Alert</item>
         <item name="android:navigationBarColor">@color/navigation_bar_color</item>
         <item name="android:statusBarColor">@color/toolbar_color</item>
@@ -17,5 +16,9 @@
 
     <style name="ActionBarStyle" parent="Widget.MaterialComponents.ActionBar.PrimarySurface">
         <item name="background">@color/toolbar_color</item>
+    </style>
+
+    <style name="MainToolbarStyle" parent="AppTheme">
+        <item name="colorControlNormal">@android:color/white</item>
     </style>
 </resources>

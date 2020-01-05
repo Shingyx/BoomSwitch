@@ -12,6 +12,7 @@ import android.view.View
 import android.widget.AdapterView
 import androidx.appcompat.app.AppCompatActivity
 import com.github.shingyx.boomswitch.R
+import com.github.shingyx.boomswitch.data.AppColorTheme
 import com.github.shingyx.boomswitch.data.BluetoothDeviceInfo
 import com.github.shingyx.boomswitch.data.BoomClient
 import com.github.shingyx.boomswitch.data.Preferences
@@ -74,12 +75,18 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.open_source_licenses) {
-            OssLicensesMenuActivity.setActivityTitle(getString(R.string.open_source_licenses))
-            startActivity(Intent(this, OssLicensesMenuActivity::class.java))
-            return true
+        return when (item.itemId) {
+            R.id.choose_theme -> {
+                chooseTheme()
+                true
+            }
+            R.id.open_source_licenses -> {
+                OssLicensesMenuActivity.setActivityTitle(getString(R.string.open_source_licenses))
+                startActivity(Intent(this, OssLicensesMenuActivity::class.java))
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
-        return super.onOptionsItemSelected(item)
     }
 
     private suspend fun switchBoom() {
@@ -139,5 +146,20 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         }
 
         adapter.updateItems(devicesInfo)
+    }
+
+    private fun chooseTheme() {
+        val themeNames = AppColorTheme.LIST.map { getString(it.descriptionResId) }.toTypedArray()
+        val currentThemeIndex = AppColorTheme.LIST.indexOf(Preferences.appColorTheme)
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.choose_theme)
+            .setSingleChoiceItems(themeNames, currentThemeIndex) { dialog, i ->
+                dialog.dismiss()
+                val selectedTheme = AppColorTheme.LIST[i]
+                Preferences.appColorTheme = selectedTheme
+                selectedTheme.apply()
+            }
+            .show()
     }
 }

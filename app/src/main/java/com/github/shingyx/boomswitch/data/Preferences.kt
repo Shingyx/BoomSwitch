@@ -2,11 +2,13 @@ package com.github.shingyx.boomswitch.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.appcompat.app.AppCompatDelegate
 
 object Preferences {
     private const val SHARED_PREFERENCES_NAME = "BoomSwitchData"
     private const val KEY_DEVICE_NAME = "DeviceName"
     private const val KEY_DEVICE_ADDRESS = "DeviceAddress"
+    private const val KEY_NIGHT_MODE = "NightMode"
 
     private lateinit var sharedPreferences: SharedPreferences
 
@@ -17,12 +19,21 @@ object Preferences {
             return if (name != null && address != null) BluetoothDeviceInfo(name, address) else null
         }
         set(value) {
-            if (value != bluetoothDeviceInfo) {
-                sharedPreferences.edit()
-                    .putString(KEY_DEVICE_NAME, value?.name)
-                    .putString(KEY_DEVICE_ADDRESS, value?.address)
-                    .apply()
-            }
+            sharedPreferences.edit()
+                .putString(KEY_DEVICE_NAME, value?.name)
+                .putString(KEY_DEVICE_ADDRESS, value?.address)
+                .apply()
+        }
+
+    var appColorTheme: AppColorTheme
+        get() {
+            val nightModeValue = sharedPreferences.getInt(KEY_NIGHT_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+            return AppColorTheme.fromNightModeValue(nightModeValue)
+        }
+        set(value) {
+            sharedPreferences.edit()
+                .putInt(KEY_NIGHT_MODE, value.nightModeValue)
+                .apply()
         }
 
     fun initialize(context: Context) {

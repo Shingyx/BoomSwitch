@@ -22,5 +22,10 @@
     <string name="error_timed_out">Timed out switching the speaker\'s power.</string>
     <string name="error_switching_already_in_progress">Switching already in progress</string>
 
+    <string name="choose_theme">Choose theme</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+    <string name="system_default">System default</string>
+
     <string name="open_source_licenses">Open source licenses</string>
 </resources>

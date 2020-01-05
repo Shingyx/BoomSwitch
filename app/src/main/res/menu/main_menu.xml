@@ -1,6 +1,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/choose_theme"
+        android:title="@string/choose_theme"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/open_source_licenses"
         android:title="@string/open_source_licenses"
         app:showAsAction="never" />
