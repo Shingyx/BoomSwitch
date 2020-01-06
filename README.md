@@ -9,7 +9,7 @@
     </a>
 </h1>
 
-BOOM Switch is a fast, lightweight app for remotely turning your UE BOOM Bluetooth speaker on and off.
+The fastest way to remotely turn your UE BOOM Bluetooth speaker on and off.
 
 Simply select your BOOM speaker from the list of paired Bluetooth devices and then press Switch to turn it on or off. Alternatively, place the widget onto your home screen to switch the speaker on or off with a single tap.
 
