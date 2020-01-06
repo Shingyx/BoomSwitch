@@ -26,6 +26,6 @@ Simply select your BOOM speaker from the list of paired Bluetooth devices and th
 
 Please raise a GitHub issue or send me an email if you experience any issues or can help confirm support for any of the speakers listed above. The list of supported and unsupported speakers will be updated as more information is obtained.
 
-Functionality is limited to switching the speaker's power. For more functionality, please use the official BOOM app by Logitech: https://play.google.com/store/apps/details?id=com.logitech.ueboom
+Functionality is intentionally limited to switching the speaker's power to keep the app fast and lightweight. For more functionality, please use the official BOOM app by Logitech: https://play.google.com/store/apps/details?id=com.logitech.ueboom
 
 Developed independently without any affiliation with Logitech. Ultimate Ears and BOOM are trademarks of Logitech.
