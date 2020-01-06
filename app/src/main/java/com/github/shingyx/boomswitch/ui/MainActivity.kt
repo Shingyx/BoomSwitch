@@ -10,6 +10,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.AppColorTheme
@@ -90,6 +91,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     }
 
     private suspend fun switchBoom() {
+        val deviceInfo = Preferences.bluetoothDeviceInfo
+            ?: return Toast.makeText(this, R.string.select_speaker, Toast.LENGTH_LONG).show()
+
         handler.removeCallbacksAndMessages(null)
 
         switch_button.isEnabled = false
@@ -97,7 +101,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         progress_description.text = ""
         fadeView(progress_description, true)
 
-        BoomClient.switchPower(this) { progressMessage ->
+        BoomClient.switchPower(this, deviceInfo) { progressMessage ->
             runOnUiThread {
                 progress_description.text = progressMessage
             }

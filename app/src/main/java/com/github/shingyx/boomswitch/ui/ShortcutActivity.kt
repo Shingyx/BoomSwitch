@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.BoomClient
+import com.github.shingyx.boomswitch.data.Preferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -44,7 +45,16 @@ class ShortcutActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     }
 
     private suspend fun switchBoom() {
-        BoomClient.switchPower(this) { progressMessage ->
+        val deviceInfo = Preferences.bluetoothDeviceInfo
+        if (deviceInfo == null) {
+            Toast.makeText(this, R.string.select_speaker, Toast.LENGTH_LONG).show()
+            val intent = Intent(this, MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            startActivity(intent)
+            return
+        }
+
+        BoomClient.switchPower(this, deviceInfo) { progressMessage ->
             runOnUiThread {
                 toast?.cancel()
                 toast = Toast.makeText(this, progressMessage, Toast.LENGTH_LONG).also {

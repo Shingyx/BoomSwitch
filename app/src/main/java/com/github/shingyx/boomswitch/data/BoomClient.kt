@@ -30,6 +30,7 @@ object BoomClient {
 
     suspend fun switchPower(
         context: Context,
+        deviceInfo: BluetoothDeviceInfo,
         reportProgress: (String) -> Unit
     ) {
         if (inProgress) {
@@ -39,7 +40,7 @@ object BoomClient {
         }
 
         inProgress = true
-        BoomClientInternal(context, reportProgress).switchPower()
+        BoomClientInternal(context, deviceInfo, reportProgress).switchPower()
         inProgress = false
     }
 }
@@ -57,6 +58,7 @@ private enum class BoomClientState {
 
 private class BoomClientInternal(
     private val context: Context,
+    private val deviceInfo: BluetoothDeviceInfo,
     private val reportProgress: (String) -> Unit
 ) : GattCallbackWrapper() {
     override val tag = javaClass.simpleName
@@ -128,9 +130,6 @@ private class BoomClientInternal(
 
     private fun initializeConnection() {
         boomClientState = BoomClientState.CONNECTING
-
-        val deviceInfo = Preferences.bluetoothDeviceInfo
-            ?: return reject("No speaker selected", R.string.error_no_speaker_selected)
 
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()?.takeIf { it.isEnabled }
             ?: return reject("Bluetooth disabled", R.string.error_bluetooth_disabled)
