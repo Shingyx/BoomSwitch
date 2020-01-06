@@ -7,10 +7,10 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.os.Handler
-import android.util.Log
 import androidx.annotation.StringRes
 import com.github.shingyx.boomswitch.R
 import kotlinx.coroutines.CompletableDeferred
+import timber.log.Timber
 import java.util.*
 
 private val SERVICE_UUID = UUID.fromString("000061fe-0000-1000-8000-00805f9b34fb")
@@ -23,8 +23,6 @@ private const val BOOM_STANDBY = 2.toByte()
 private const val TIMEOUT = 15000L
 
 object BoomClient {
-    private val tag = javaClass.simpleName
-
     @Volatile
     private var inProgress = false
 
@@ -34,7 +32,7 @@ object BoomClient {
         reportProgress: (String) -> Unit
     ) {
         if (inProgress) {
-            Log.w(tag, "Switching already in progress")
+            Timber.w("Switching already in progress")
             reportProgress(context.getString(R.string.error_switching_already_in_progress))
             return
         }
@@ -61,8 +59,6 @@ private class BoomClientInternal(
     private val deviceInfo: BluetoothDeviceInfo,
     private val reportProgress: (String) -> Unit
 ) : GattCallbackWrapper() {
-    override val tag = javaClass.simpleName
-
     private val handler = Handler()
     private val deferred = CompletableDeferred<Unit>()
     private var switchingOn = false
@@ -70,7 +66,7 @@ private class BoomClientInternal(
 
     private var boomClientState = BoomClientState.NOT_STARTED
         set(value) {
-            Log.i(tag, "Setting boom client state to $value")
+            Timber.i("Setting boom client state to $value")
             when (value) {
                 BoomClientState.CONNECTING -> R.string.connecting_to_speaker
                 BoomClientState.CONNECTING_RETRY -> R.string.retry_connecting_to_speaker
@@ -95,7 +91,7 @@ private class BoomClientInternal(
         // and reduce the likelihood of issues on reconnect
         val delay = if (switchingOn) 2500L else 1000L
         handler.postDelayed({
-            Log.i(tag, "Resolving deferred with $switchingOn")
+            Timber.i("Resolving deferred with $switchingOn")
             val resId = if (switchingOn) R.string.boom_switched_on else R.string.boom_switched_off
             reportProgress(context.getString(resId))
             deferred.complete(Unit)
@@ -103,8 +99,7 @@ private class BoomClientInternal(
     }
 
     private fun reject(message: String, @StringRes resId: Int, vararg formatArgs: String) {
-        val exception = Exception(message)
-        Log.w(tag, "Failed to switch power", exception)
+        Timber.w(Exception(message), "Failed to switch power")
         teardown()
         reportProgress(context.getString(resId, *formatArgs))
         deferred.complete(Unit)
@@ -146,7 +141,7 @@ private class BoomClientInternal(
             when (boomClientState) {
                 BoomClientState.CONNECTING -> {
                     boomClientState = BoomClientState.CONNECTING_RETRY
-                    Log.i(tag, "Connection attempt failed, retrying")
+                    Timber.i("Connection attempt failed, retrying")
                     if (!gatt.connect()) {
                         reject("Retry connection failed", R.string.error_connection_failed)
                     }

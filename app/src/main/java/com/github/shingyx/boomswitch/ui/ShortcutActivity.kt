@@ -3,7 +3,6 @@ package com.github.shingyx.boomswitch.ui
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.github.shingyx.boomswitch.R
@@ -12,21 +11,20 @@ import com.github.shingyx.boomswitch.data.Preferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 private const val ACTION_SWITCH = "com.github.shingyx.boomswitch.SWITCH"
 
 private var toast: Toast? = null
 
 class ShortcutActivity : AppCompatActivity(), CoroutineScope by MainScope() {
-    private val tag = javaClass.simpleName
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         when (intent.action) {
             Intent.ACTION_CREATE_SHORTCUT -> createShortcut()
             ACTION_SWITCH -> launch { switchBoom() }
-            else -> Log.w(tag, "Unknown intent action ${intent.action}")
+            else -> Timber.w("Unknown intent action ${intent.action}")
         }
 
         finish()
