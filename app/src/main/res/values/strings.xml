@@ -3,6 +3,7 @@
 
     <string name="boom_speaker">BOOM Speaker</string>
     <string name="switch_text">Switch</string>
+    <string name="version">Version %1$s</string>
     <string name="no_devices_found">No paired Bluetooth devices found!</string>
     <string name="bluetooth_turned_off_alert">Bluetooth is turned off. Please turn Bluetooth on then come back to the app.</string>
     <string name="select_speaker">Please select your speaker first.</string>

@@ -12,6 +12,7 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.github.shingyx.boomswitch.BuildConfig
 import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.AppColorTheme
 import com.github.shingyx.boomswitch.data.BluetoothDeviceInfo
@@ -55,6 +56,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
         switch_button.isEnabled = Preferences.bluetoothDeviceInfo != null
         switch_button.setOnClickListener { launch { switchBoom() } }
+
+        version.text = getString(R.string.version, BuildConfig.VERSION_NAME)
 
         registerReceiver(bluetoothStateReceiver, BluetoothStateReceiver.intentFilter())
     }
