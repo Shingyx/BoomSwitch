@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.view.Menu
@@ -79,18 +80,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.choose_theme -> {
-                chooseTheme()
-                true
-            }
-            R.id.open_source_licenses -> {
-                OssLicensesMenuActivity.setActivityTitle(getString(R.string.open_source_licenses))
-                startActivity(Intent(this, OssLicensesMenuActivity::class.java))
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
+        when (item.itemId) {
+            R.id.choose_theme -> chooseTheme()
+            R.id.open_source_licenses -> showOpenSourceLicenses()
+            R.id.send_feedback -> sendFeedback()
+            else -> return super.onOptionsItemSelected(item)
         }
+        return true
     }
 
     private suspend fun switchBoom() {
@@ -168,5 +164,23 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                 selectedTheme.apply()
             }
             .show()
+    }
+
+    private fun showOpenSourceLicenses() {
+        OssLicensesMenuActivity.setActivityTitle(getString(R.string.open_source_licenses))
+        startActivity(Intent(this, OssLicensesMenuActivity::class.java))
+    }
+
+    private fun sendFeedback() {
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            data = Uri.parse("mailto:")
+            putExtra(Intent.EXTRA_EMAIL, arrayOf("shingyx.dev@gmail.com"))
+            putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name) + " Feedback")
+        }
+        if (intent.resolveActivity(packageManager) != null) {
+            startActivity(intent)
+        } else {
+            Toast.makeText(this, R.string.error_no_email_client, Toast.LENGTH_LONG).show()
+        }
     }
 }
