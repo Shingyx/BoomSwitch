@@ -15,7 +15,7 @@ before_script:
   - echo yes | ${ANDROID_HOME}/tools/bin/sdkmanager "tools" > /dev/null
   - echo yes | ${ANDROID_HOME}/tools/bin/sdkmanager "platform-tools" > /dev/null
 
-script: ./gradlew build
+script: ./gradlew buildDebug
 
 before_cache:
   - rm -f  ${HOME}/.gradle/caches/modules-2/modules-2.lock
