@@ -161,20 +161,24 @@ private class BoomClientInternal(
         gatt = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
             ?: return reject("connectGatt returned null", R.string.error_null_bluetooth_client)
 
-        bluetoothAdapter.getProfileProxy(context, object : BluetoothProfile.ServiceListener {
-            override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
-                Timber.v("getProfileProxy onServiceConnected")
-                // Note: small risk of Gatt process completing before bluetoothA2dp is assigned
-                bluetoothA2dp = proxy as BluetoothA2dp
-                if (boomClientState == BoomClientState.COMPLETED) {
-                    bluetoothAdapter.closeProfileProxy(BluetoothProfile.A2DP, bluetoothA2dp)
+        bluetoothAdapter.getProfileProxy(
+            context.applicationContext,
+            object : BluetoothProfile.ServiceListener {
+                override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
+                    Timber.v("getProfileProxy onServiceConnected")
+                    // Note: small risk of Gatt process completing before bluetoothA2dp is assigned
+                    bluetoothA2dp = proxy as BluetoothA2dp
+                    if (boomClientState == BoomClientState.COMPLETED) {
+                        bluetoothAdapter.closeProfileProxy(BluetoothProfile.A2DP, bluetoothA2dp)
+                    }
                 }
-            }
 
-            override fun onServiceDisconnected(profile: Int) {
-                Timber.v("getProfileProxy onServiceDisconnected")
-            }
-        }, BluetoothProfile.A2DP)
+                override fun onServiceDisconnected(profile: Int) {
+                    Timber.v("getProfileProxy onServiceDisconnected")
+                }
+            },
+            BluetoothProfile.A2DP
+        )
     }
 
     /**
