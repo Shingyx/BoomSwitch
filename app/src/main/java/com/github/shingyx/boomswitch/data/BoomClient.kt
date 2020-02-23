@@ -1,5 +1,6 @@
 package com.github.shingyx.boomswitch.data
 
+import android.bluetooth.BluetoothA2dp
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
@@ -58,6 +59,12 @@ private enum class BoomClientState {
     COMPLETED,
 }
 
+private enum class SwitchAction {
+    POWER_ON,
+    POWER_OFF,
+    CONNECT_FOR_AUDIO,
+}
+
 private class BoomClientInternal(
     private val context: Context,
     private val deviceInfo: BluetoothDeviceInfo,
@@ -65,8 +72,12 @@ private class BoomClientInternal(
 ) : GattCallbackWrapper() {
     private val handler = Handler()
     private val deferred = CompletableDeferred<Unit>()
-    private var switchingOn = false
+    private var switchAction: SwitchAction? = null
+
+    private lateinit var bluetoothAdapter: BluetoothAdapter
+    private lateinit var device: BluetoothDevice
     private lateinit var gatt: BluetoothGatt
+    private var bluetoothA2dp: BluetoothA2dp? = null
 
     private var boomClientState = BoomClientState.NOT_STARTED
         set(value) {
@@ -93,10 +104,14 @@ private class BoomClientInternal(
 
         // Add a delay to complete the deferred at the same time the speaker plays a sound
         // and reduce the likelihood of issues on reconnect
-        val delay = if (switchingOn) 2500L else 1000L
+        val delay = if (switchAction != SwitchAction.POWER_OFF) 2500L else 1000L
         handler.postDelayed({
-            Timber.i("Resolving deferred with $switchingOn")
-            val resId = if (switchingOn) R.string.boom_switched_on else R.string.boom_switched_off
+            Timber.i("Resolving deferred with $switchAction")
+            val resId = when (switchAction!!) {
+                SwitchAction.POWER_ON -> R.string.boom_switched_on
+                SwitchAction.POWER_OFF -> R.string.boom_switched_off
+                SwitchAction.CONNECT_FOR_AUDIO -> R.string.boom_connected_for_audio
+            }
             reportProgress(context.getString(resId))
             deferred.complete(Unit)
         }, delay)
@@ -113,6 +128,9 @@ private class BoomClientInternal(
         handler.removeCallbacksAndMessages(null)
         if (this::gatt.isInitialized) {
             gatt.close()
+        }
+        if (bluetoothA2dp != null) {
+            bluetoothAdapter.closeProfileProxy(BluetoothProfile.A2DP, bluetoothA2dp)
         }
         boomClientState = BoomClientState.COMPLETED
     }
@@ -134,14 +152,29 @@ private class BoomClientInternal(
     private fun initializeConnection() {
         boomClientState = BoomClientState.CONNECTING
 
-        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()?.takeIf { it.isEnabled }
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()?.takeIf { it.isEnabled }
             ?: return reject("Bluetooth disabled", R.string.error_bluetooth_disabled)
 
-        val device = bluetoothAdapter.bondedDevices.find { it.address == deviceInfo.address }
+        device = bluetoothAdapter.bondedDevices.find { it.address == deviceInfo.address }
             ?: return reject("Speaker not paired", R.string.error_speaker_unpaired, deviceInfo.name)
 
         gatt = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
             ?: return reject("connectGatt returned null", R.string.error_null_bluetooth_client)
+
+        bluetoothAdapter.getProfileProxy(context, object : BluetoothProfile.ServiceListener {
+            override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
+                Timber.v("getProfileProxy onServiceConnected")
+                // Note: small risk of Gatt process completing before bluetoothA2dp is assigned
+                bluetoothA2dp = proxy as BluetoothA2dp
+                if (boomClientState == BoomClientState.COMPLETED) {
+                    bluetoothAdapter.closeProfileProxy(BluetoothProfile.A2DP, bluetoothA2dp)
+                }
+            }
+
+            override fun onServiceDisconnected(profile: Int) {
+                Timber.v("getProfileProxy onServiceDisconnected")
+            }
+        }, BluetoothProfile.A2DP)
     }
 
     /**
@@ -179,11 +212,17 @@ private class BoomClientInternal(
         val powerByteValue: Byte
 
         if (speakerIsInactive) {
-            switchingOn = true
+            switchAction = SwitchAction.POWER_ON
             powerByteValue = BOOM_POWER_ON
         } else {
-            switchingOn = false
-            powerByteValue = BOOM_POWER_OFF
+            val isConnectedForAudio = bluetoothA2dp?.connectedDevices?.contains(device) == true
+            if (isConnectedForAudio) {
+                switchAction = SwitchAction.POWER_OFF
+                powerByteValue = BOOM_POWER_OFF
+            } else {
+                switchAction = SwitchAction.CONNECT_FOR_AUDIO
+                powerByteValue = BOOM_POWER_ON // "Power on" will connect the speaker for audio
+            }
         }
 
         val powerCharacteristic = gatt.getService(SERVICE_UUID)?.getCharacteristic(WRITE_POWER_UUID)
