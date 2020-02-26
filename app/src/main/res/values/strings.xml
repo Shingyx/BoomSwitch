@@ -13,6 +13,7 @@
     <string name="switching_speakers_power">Switching speaker\'s power…</string>
     <string name="boom_switched_on">BOOM switched on!</string>
     <string name="boom_switched_off">BOOM switched off!</string>
+    <string name="boom_connected_for_audio">BOOM connected for audio!</string>
 
     <string name="error_bluetooth_disabled">Bluetooth is turned off. Please turn Bluetooth on then try again.</string>
     <string name="error_speaker_unpaired">Could not find %1$s. Has it been unpaired?</string>
