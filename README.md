@@ -30,6 +30,7 @@ Simply select your BOOM speaker from the list of paired Bluetooth devices and th
 <b>Unsupported speakers</b>
 - WONDERBOOM / WONDERBOOM 2
 - BLAST / MEGABLAST (unconfirmed)
+- HYPERBOOM (unconfirmed)
 
 Please raise a GitHub issue or send me an email if you experience any issues or can help confirm support for any of the speakers listed above. The list of supported and unsupported speakers will be updated as more information is obtained.
 
