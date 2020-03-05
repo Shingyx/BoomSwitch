@@ -25,6 +25,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     private lateinit var handler: Handler
@@ -128,18 +129,26 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     }
 
     private fun updateBluetoothDevices() {
-        val bondedDevices = BluetoothAdapter.getDefaultAdapter()
-            ?.takeIf { it.isEnabled }
-            ?.bondedDevices
+        var devicesInfo: List<BluetoothDeviceInfo>? = null
 
-        val devicesInfo = if (bondedDevices != null) {
-            if (bluetoothOffAlertDialog.isInitialized()) {
-                bluetoothOffAlertDialog.value.dismiss()
+        try {
+            val bondedDevices = BluetoothAdapter.getDefaultAdapter()
+                ?.takeIf { it.isEnabled }
+                ?.bondedDevices
+
+            if (bondedDevices != null) {
+                if (bluetoothOffAlertDialog.isInitialized()) {
+                    bluetoothOffAlertDialog.value.dismiss()
+                }
+                devicesInfo = bondedDevices.map { BluetoothDeviceInfo(it) }.sorted()
             }
-            bondedDevices.map { BluetoothDeviceInfo(it) }.sorted()
-        } else {
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to read bonded devices")
+        }
+
+        if (devicesInfo == null) {
             bluetoothOffAlertDialog.value.show()
-            emptyList()
+            devicesInfo = emptyList()
         }
 
         select_speaker_container.error = if (devicesInfo.isEmpty()) {
