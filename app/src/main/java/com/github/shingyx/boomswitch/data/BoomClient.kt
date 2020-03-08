@@ -13,6 +13,7 @@ import com.github.shingyx.boomswitch.R
 import kotlinx.coroutines.CompletableDeferred
 import timber.log.Timber
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 private val SERVICE_UUID = UUID.fromString("000061fe-0000-1000-8000-00805f9b34fb")
 private val WRITE_POWER_UUID = UUID.fromString("c6d6dc0d-07f5-47ef-9b59-630622b01fd3")
@@ -28,23 +29,21 @@ private const val BOOM_POWER_OFF = 2.toByte()
 private const val TIMEOUT = 15000L
 
 object BoomClient {
-    @Volatile
-    private var inProgress = false
+    private val inProgressMap = ConcurrentHashMap<String, Unit>()
 
     suspend fun switchPower(
         context: Context,
         deviceInfo: BluetoothDeviceInfo,
         reportProgress: (String) -> Unit
     ) {
-        if (inProgress) {
+        if (inProgressMap.putIfAbsent(deviceInfo.address, Unit) != null) {
             Timber.w("Switching already in progress")
             reportProgress(context.getString(R.string.error_switching_already_in_progress))
             return
         }
 
-        inProgress = true
         BoomClientInternal(context, deviceInfo, reportProgress).switchPower()
-        inProgress = false
+        inProgressMap.remove(deviceInfo.address)
     }
 }
 
