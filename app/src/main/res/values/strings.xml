@@ -35,4 +35,7 @@
     <string name="send_feedback_email_subject">BOOM Switch Feedback</string>
     <string name="send_feedback_email_body">To submit feedback, please enter your message below and then send the email.\n\n</string>
     <string name="error_no_email_client">Please install an email app to send feedback</string>
+
+    <string name="shortcut_label_simple">Simple</string>
+    <string name="shortcut_label_choose_speaker">Choose speaker</string>
 </resources>

@@ -23,13 +23,30 @@
         </activity>
 
         <activity
-            android:name=".ui.ShortcutActivity"
+            android:name=".ui.CreateSimpleShortcutActivity"
+            android:label="@string/shortcut_label_simple"
             android:taskAffinity=".shortcut"
             android:theme="@android:style/Theme.NoDisplay">
             <intent-filter>
                 <action android:name="android.intent.action.CREATE_SHORTCUT" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.CreateChosenSpeakerShortcutActivity"
+            android:label="@string/shortcut_label_choose_speaker"
+            android:taskAffinity=".shortcut"
+            android:theme="@style/AppThemeNoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.CREATE_SHORTCUT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.ShortcutActivity"
+            android:exported="true"
+            android:taskAffinity=".shortcut"
+            android:theme="@android:style/Theme.NoDisplay" />
 
     </application>
 
