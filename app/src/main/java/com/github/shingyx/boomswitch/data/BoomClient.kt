@@ -38,8 +38,9 @@ object BoomClient {
     ) {
         if (inProgressMap.putIfAbsent(deviceInfo.address, Unit) != null) {
             Timber.w("Switching already in progress")
-            reportProgress(context.getString(R.string.error_switching_already_in_progress))
-            return
+            return reportProgress(
+                context.getString(R.string.error_switching_already_in_progress, deviceInfo.name)
+            )
         }
 
         BoomClientInternal(context, deviceInfo, reportProgress).switchPower()
@@ -86,7 +87,7 @@ private class BoomClientInternal(
                 BoomClientState.CONNECTING_RETRY -> R.string.retry_connecting_to_speaker
                 BoomClientState.DISCOVERING_SERVICES -> R.string.switching_speakers_power
                 else -> null
-            }?.let { reportProgress(context.getString(it)) }
+            }?.let { reportProgress(context.getString(it, deviceInfo.name)) }
             field = value
         }
 
@@ -111,15 +112,15 @@ private class BoomClientInternal(
                 SwitchAction.POWER_OFF -> R.string.boom_switched_off
                 SwitchAction.CONNECT_FOR_AUDIO -> R.string.boom_connected_for_audio
             }
-            reportProgress(context.getString(resId))
+            reportProgress(context.getString(resId, deviceInfo.name))
             deferred.complete(Unit)
         }, delay)
     }
 
-    private fun reject(message: String, @StringRes resId: Int, vararg formatArgs: String) {
+    private fun reject(message: String, @StringRes resId: Int) {
         Timber.w(Exception(message), "Failed to switch power")
         teardown()
-        reportProgress(context.getString(resId, *formatArgs))
+        reportProgress(context.getString(resId, deviceInfo.name))
         deferred.complete(Unit)
     }
 
@@ -155,7 +156,7 @@ private class BoomClientInternal(
             ?: return reject("Bluetooth disabled", R.string.error_bluetooth_disabled)
 
         device = bluetoothAdapter.bondedDevices.find { it.address == deviceInfo.address }
-            ?: return reject("Speaker not paired", R.string.error_speaker_unpaired, deviceInfo.name)
+            ?: return reject("Speaker not paired", R.string.error_speaker_unpaired)
 
         gatt = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
             ?: return reject("connectGatt returned null", R.string.error_null_bluetooth_client)
@@ -240,7 +241,7 @@ private class BoomClientInternal(
     }
 
     /**
-     * Closes the Gatt connection to the speaker.
+     * Closes the Gatt connection with the speaker.
      * Called by [onCharacteristicWrite] and continued by [onConnectionStateChange].
      */
     private fun disconnectSpeaker() {
