@@ -161,14 +161,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     }
 
     private fun chooseTheme() {
-        val themeNames = AppColorTheme.LIST.map { getString(it.descriptionResId) }.toTypedArray()
-        val currentThemeIndex = AppColorTheme.LIST.indexOf(Preferences.appColorTheme)
+        val themes = AppColorTheme.values()
+        val themeNames = themes.map { getString(it.descriptionResId) }.toTypedArray()
+        val currentThemeIndex = themes.indexOf(Preferences.appColorTheme)
 
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.choose_theme)
             .setSingleChoiceItems(themeNames, currentThemeIndex) { dialog, i ->
                 dialog.dismiss()
-                val selectedTheme = AppColorTheme.LIST[i]
+                val selectedTheme = themes[i]
                 Preferences.appColorTheme = selectedTheme
                 selectedTheme.apply()
             }

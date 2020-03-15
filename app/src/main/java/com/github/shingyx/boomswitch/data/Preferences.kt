@@ -14,9 +14,9 @@ object Preferences {
 
     var bluetoothDeviceInfo: BluetoothDeviceInfo?
         get() {
-            val name = sharedPreferences.getString(KEY_DEVICE_NAME, null)
-            val address = sharedPreferences.getString(KEY_DEVICE_ADDRESS, null)
-            return if (name != null && address != null) BluetoothDeviceInfo(name, address) else null
+            val name = sharedPreferences.getString(KEY_DEVICE_NAME, null) ?: return null
+            val address = sharedPreferences.getString(KEY_DEVICE_ADDRESS, null) ?: return null
+            return BluetoothDeviceInfo(name, address)
         }
         set(value) {
             sharedPreferences.edit()
