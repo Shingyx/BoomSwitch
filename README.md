@@ -23,8 +23,9 @@ Simply select your BOOM speaker from the list of paired Bluetooth devices and th
 <b>Supported speakers</b>
 - BOOM 3
 - MEGABOOM 3
-- BOOM / BOOM 2 (unconfirmed)
+- BOOM 2
 - MEGABOOM (unconfirmed)
+- BOOM (unconfirmed)
 - ROLL / ROLL 2 (unconfirmed)
 
 <b>Unsupported speakers</b>
@@ -32,7 +33,7 @@ Simply select your BOOM speaker from the list of paired Bluetooth devices and th
 - BLAST / MEGABLAST (unconfirmed)
 - HYPERBOOM (unconfirmed)
 
-Please raise a GitHub issue or send me an email if you experience any issues or can help confirm support for any of the speakers listed above. The list of supported and unsupported speakers will be updated as more information is obtained.
+Please raise a GitHub issue or send feedback in the app if you experience any issues or can help confirm support for any of the speakers listed above. The list of supported and unsupported speakers will be updated as more information is obtained. Your speaker may require a firmware update to work with this app.
 
 Functionality is intentionally limited to switching the speaker's power to keep the app fast and lightweight. For more functionality, please use the official BOOM app by Logitech: https://play.google.com/store/apps/details?id=com.logitech.ueboom
 
