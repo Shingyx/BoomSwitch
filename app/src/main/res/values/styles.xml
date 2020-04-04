@@ -14,7 +14,7 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppThemeDialog" parent="@style/Theme.MaterialComponents.DayNight.Dialog">
+    <style name="AppThemeDialog" parent="Theme.MaterialComponents.DayNight.Dialog">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorSecondary">@color/primary</item>
         <item name="windowActionBar">false</item>

@@ -17,22 +17,22 @@ import timber.log.Timber
 class ShortcutActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        finish() // Finish asap, or multiple tasks could appear
+        finish() // Finish ASAP, or multiple tasks could appear
 
-        if (intent.action == ACTION_SWITCH) {
-            val deviceInfo = BluetoothDeviceInfo.createFromIntent(intent)
-                ?: Preferences.bluetoothDeviceInfo
+        if (intent.action != ACTION_SWITCH) {
+            return Timber.w("Unexpected intent action ${intent.action}")
+        }
 
-            if (deviceInfo == null) {
-                updateToast(getString(R.string.select_speaker))
-                val intent = Intent(this, MainActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                startActivity(intent)
-            } else {
-                launch { switchBoom(deviceInfo) }
-            }
+        val deviceInfo = BluetoothDeviceInfo.createFromIntent(intent)
+            ?: Preferences.bluetoothDeviceInfo
+
+        if (deviceInfo == null) {
+            updateToast(getString(R.string.select_speaker))
+            val intent = Intent(this, MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            startActivity(intent)
         } else {
-            Timber.w("Unexpected intent action ${intent.action}")
+            launch { switchBoom(deviceInfo) }
         }
     }
 
