@@ -1,7 +1,6 @@
 package com.github.shingyx.boomswitch.ui
 
 import android.app.Activity
-import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.os.Bundle
 import android.widget.AdapterView
@@ -9,6 +8,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.BluetoothDeviceInfo
+import com.github.shingyx.boomswitch.data.BoomClient
 import kotlinx.android.synthetic.main.activity_create_shortcut.*
 import timber.log.Timber
 
@@ -41,19 +41,7 @@ class CreateShortcutActivity : AppCompatActivity() {
     }
 
     private fun createBluetoothDeviceAdapter(): BluetoothDeviceAdapter? {
-        var devicesInfo: List<BluetoothDeviceInfo>? = null
-
-        try {
-            val bondedDevices = BluetoothAdapter.getDefaultAdapter()
-                ?.takeIf { it.isEnabled }
-                ?.bondedDevices
-
-            if (bondedDevices != null) {
-                devicesInfo = bondedDevices.map { BluetoothDeviceInfo(it) }.sorted()
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to read bonded devices")
-        }
+        val devicesInfo = BoomClient.getPairedDevicesInfo()
 
         if (devicesInfo == null) {
             Toast.makeText(this, R.string.error_bluetooth_disabled, Toast.LENGTH_LONG).show()

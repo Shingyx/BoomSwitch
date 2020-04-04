@@ -46,6 +46,21 @@ object BoomClient {
         BoomClientInternal(context, deviceInfo, reportProgress).switchPower()
         inProgressMap.remove(deviceInfo.address)
     }
+
+    fun getPairedDevicesInfo(): List<BluetoothDeviceInfo>? {
+        try {
+            val bondedDevices = BluetoothAdapter.getDefaultAdapter()
+                ?.takeIf { it.isEnabled }
+                ?.bondedDevices
+
+            if (bondedDevices != null) {
+                return bondedDevices.map { BluetoothDeviceInfo(it) }.sorted()
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to read bonded devices")
+        }
+        return null
+    }
 }
 
 private enum class BoomClientState {
