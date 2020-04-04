@@ -11,8 +11,8 @@
         <img alt='Get it on Google Play' src='.github/play-store-badge-no-padding.png' height='40'>
     </a>
     &nbsp;
-    <a href="https://travis-ci.com/Shingyx/BoomSwitch">
-        <img src="https://travis-ci.com/Shingyx/BoomSwitch.svg?branch=master">
+    <a href="https://github.com/Shingyx/BoomSwitch/actions?query=workflow%3A%22Android+CI%22+branch%3Amaster">
+        <img src="https://github.com/Shingyx/BoomSwitch/workflows/Android%20CI/badge.svg?branch=master">
     </a>
 </h1>
 
