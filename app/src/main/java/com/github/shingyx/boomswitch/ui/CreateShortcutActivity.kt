@@ -9,13 +9,16 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.BluetoothDeviceInfo
-import kotlinx.android.synthetic.main.activity_create_chosen_speaker_shortcut.*
+import kotlinx.android.synthetic.main.activity_create_shortcut.*
 import timber.log.Timber
 
-class CreateChosenSpeakerShortcutActivity : AppCompatActivity() {
+class CreateShortcutActivity : AppCompatActivity() {
+    private val fakeUseLastSelectedSpeakerDevice =
+        BluetoothDeviceInfo("Use last selected speaker", "")
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_create_chosen_speaker_shortcut)
+        setContentView(R.layout.activity_create_shortcut)
         setSupportActionBar(toolbar)
 
         if (intent.action != Intent.ACTION_CREATE_SHORTCUT) {
@@ -28,7 +31,9 @@ class CreateChosenSpeakerShortcutActivity : AppCompatActivity() {
 
         speaker_list.adapter = adapter
         speaker_list.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
-            val selectedSpeaker = adapter.getItem(position)
+            val selectedSpeaker = adapter.getItem(position).takeUnless {
+                it == fakeUseLastSelectedSpeakerDevice
+            }
             val intent = ShortcutActivity.createShortcutIntent(this, selectedSpeaker)
             setResult(Activity.RESULT_OK, intent)
             finish()
@@ -60,6 +65,6 @@ class CreateChosenSpeakerShortcutActivity : AppCompatActivity() {
             return null
         }
 
-        return BluetoothDeviceAdapter(this, devicesInfo)
+        return BluetoothDeviceAdapter(this, listOf(fakeUseLastSelectedSpeakerDevice) + devicesInfo)
     }
 }
