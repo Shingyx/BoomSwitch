@@ -184,7 +184,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         val intent = Intent(Intent.ACTION_SENDTO).apply {
             data = Uri.parse("mailto:")
             putExtra(Intent.EXTRA_EMAIL, arrayOf("shingyx.dev@gmail.com"))
-            putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name) + " Feedback")
+            putExtra(Intent.EXTRA_SUBJECT, getString(R.string.send_feedback_email_subject))
+            putExtra(Intent.EXTRA_TEXT, getString(R.string.send_feedback_email_body))
         }
         if (intent.resolveActivity(packageManager) != null) {
             startActivity(intent)
