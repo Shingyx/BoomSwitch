@@ -2,7 +2,6 @@ package com.github.shingyx.boomswitch.ui
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
-import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -16,7 +15,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.github.shingyx.boomswitch.BuildConfig
 import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.AppColorTheme
-import com.github.shingyx.boomswitch.data.BluetoothDeviceInfo
 import com.github.shingyx.boomswitch.data.BoomClient
 import com.github.shingyx.boomswitch.data.Preferences
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
@@ -25,7 +23,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     private lateinit var handler: Handler
@@ -129,26 +126,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     }
 
     private fun updateBluetoothDevices() {
-        var devicesInfo: List<BluetoothDeviceInfo>? = null
-
-        try {
-            val bondedDevices = BluetoothAdapter.getDefaultAdapter()
-                ?.takeIf { it.isEnabled }
-                ?.bondedDevices
-
-            if (bondedDevices != null) {
-                if (bluetoothOffAlertDialog.isInitialized()) {
-                    bluetoothOffAlertDialog.value.dismiss()
-                }
-                devicesInfo = bondedDevices.map { BluetoothDeviceInfo(it) }.sorted()
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to read bonded devices")
-        }
+        var devicesInfo = BoomClient.getPairedDevicesInfo()
 
         if (devicesInfo == null) {
             bluetoothOffAlertDialog.value.show()
             devicesInfo = emptyList()
+        } else {
+            if (bluetoothOffAlertDialog.isInitialized()) {
+                bluetoothOffAlertDialog.value.dismiss()
+            }
         }
 
         select_speaker_container.error = if (devicesInfo.isEmpty()) {
@@ -161,14 +147,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     }
 
     private fun chooseTheme() {
-        val themeNames = AppColorTheme.LIST.map { getString(it.descriptionResId) }.toTypedArray()
-        val currentThemeIndex = AppColorTheme.LIST.indexOf(Preferences.appColorTheme)
+        val themes = AppColorTheme.values()
+        val themeNames = themes.map { getString(it.descriptionResId) }.toTypedArray()
+        val currentThemeIndex = themes.indexOf(Preferences.appColorTheme)
 
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.choose_theme)
             .setSingleChoiceItems(themeNames, currentThemeIndex) { dialog, i ->
                 dialog.dismiss()
-                val selectedTheme = AppColorTheme.LIST[i]
+                val selectedTheme = themes[i]
                 Preferences.appColorTheme = selectedTheme
                 selectedTheme.apply()
             }

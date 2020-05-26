@@ -13,6 +13,7 @@ import com.github.shingyx.boomswitch.R
 import kotlinx.coroutines.CompletableDeferred
 import timber.log.Timber
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 private val SERVICE_UUID = UUID.fromString("000061fe-0000-1000-8000-00805f9b34fb")
 private val WRITE_POWER_UUID = UUID.fromString("c6d6dc0d-07f5-47ef-9b59-630622b01fd3")
@@ -28,23 +29,37 @@ private const val BOOM_POWER_OFF = 2.toByte()
 private const val TIMEOUT = 15000L
 
 object BoomClient {
-    @Volatile
-    private var inProgress = false
+    private val inProgressMap = ConcurrentHashMap<String, Unit>()
 
     suspend fun switchPower(
         context: Context,
         deviceInfo: BluetoothDeviceInfo,
         reportProgress: (String) -> Unit
     ) {
-        if (inProgress) {
+        if (inProgressMap.putIfAbsent(deviceInfo.address, Unit) != null) {
             Timber.w("Switching already in progress")
-            reportProgress(context.getString(R.string.error_switching_already_in_progress))
-            return
+            return reportProgress(
+                context.getString(R.string.error_switching_already_in_progress, deviceInfo.name)
+            )
         }
 
-        inProgress = true
         BoomClientInternal(context, deviceInfo, reportProgress).switchPower()
-        inProgress = false
+        inProgressMap.remove(deviceInfo.address)
+    }
+
+    fun getPairedDevicesInfo(): List<BluetoothDeviceInfo>? {
+        try {
+            val bondedDevices = BluetoothAdapter.getDefaultAdapter()
+                ?.takeIf { it.isEnabled }
+                ?.bondedDevices
+
+            if (bondedDevices != null) {
+                return bondedDevices.map { BluetoothDeviceInfo(it) }.sorted()
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to read bonded devices")
+        }
+        return null
     }
 }
 
@@ -87,7 +102,7 @@ private class BoomClientInternal(
                 BoomClientState.CONNECTING_RETRY -> R.string.retry_connecting_to_speaker
                 BoomClientState.DISCOVERING_SERVICES -> R.string.switching_speakers_power
                 else -> null
-            }?.let { reportProgress(context.getString(it)) }
+            }?.let { reportProgress(context.getString(it, deviceInfo.name)) }
             field = value
         }
 
@@ -112,15 +127,15 @@ private class BoomClientInternal(
                 SwitchAction.POWER_OFF -> R.string.boom_switched_off
                 SwitchAction.CONNECT_FOR_AUDIO -> R.string.boom_connected_for_audio
             }
-            reportProgress(context.getString(resId))
+            reportProgress(context.getString(resId, deviceInfo.name))
             deferred.complete(Unit)
         }, delay)
     }
 
-    private fun reject(message: String, @StringRes resId: Int, vararg formatArgs: String) {
+    private fun reject(message: String, @StringRes resId: Int) {
         Timber.w(Exception(message), "Failed to switch power")
         teardown()
-        reportProgress(context.getString(resId, *formatArgs))
+        reportProgress(context.getString(resId, deviceInfo.name))
         deferred.complete(Unit)
     }
 
@@ -156,7 +171,7 @@ private class BoomClientInternal(
             ?: return reject("Bluetooth disabled", R.string.error_bluetooth_disabled)
 
         device = bluetoothAdapter.bondedDevices.find { it.address == deviceInfo.address }
-            ?: return reject("Speaker not paired", R.string.error_speaker_unpaired, deviceInfo.name)
+            ?: return reject("Speaker not paired", R.string.error_speaker_unpaired)
 
         gatt = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
             ?: return reject("connectGatt returned null", R.string.error_null_bluetooth_client)
@@ -241,7 +256,7 @@ private class BoomClientInternal(
     }
 
     /**
-     * Closes the Gatt connection to the speaker.
+     * Closes the Gatt connection with the speaker.
      * Called by [onCharacteristicWrite] and continued by [onConnectionStateChange].
      */
     private fun disconnectSpeaker() {

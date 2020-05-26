@@ -8,21 +8,21 @@
     <string name="bluetooth_turned_off_alert">Bluetooth is turned off. Please turn Bluetooth on then come back to the app.</string>
     <string name="select_speaker">Please select your speaker first.</string>
 
-    <string name="connecting_to_speaker">Connecting to speaker…</string>
-    <string name="retry_connecting_to_speaker">First connection attempt failed, retrying…</string>
-    <string name="switching_speakers_power">Switching speaker\'s power…</string>
-    <string name="boom_switched_on">BOOM switched on!</string>
-    <string name="boom_switched_off">BOOM switched off!</string>
-    <string name="boom_connected_for_audio">BOOM connected for audio!</string>
+    <string name="connecting_to_speaker">Connecting to %1$s…</string>
+    <string name="retry_connecting_to_speaker">Retrying connection with %1$s…</string>
+    <string name="switching_speakers_power">Switching %1$s\'s power…</string>
+    <string name="boom_switched_on">%1$s switched on!</string>
+    <string name="boom_switched_off">%1$s switched off!</string>
+    <string name="boom_connected_for_audio">%1$s connected for audio!</string>
 
     <string name="error_bluetooth_disabled">Bluetooth is turned off. Please turn Bluetooth on then try again.</string>
     <string name="error_speaker_unpaired">Could not find %1$s. Has it been unpaired?</string>
-    <string name="error_null_bluetooth_client">Connection failed. Bluetooth LE might not be supported on your device.</string>
-    <string name="error_switching_power_failed">Failed to switch the speaker\'s power. It might not be supported.</string>
-    <string name="error_unexpected_disconnect">Unexpectedly disconnected from speaker.</string>
-    <string name="error_connection_failed">Connection failed. Is the speaker in range?</string>
-    <string name="error_timed_out">Timed out switching the speaker\'s power.</string>
-    <string name="error_switching_already_in_progress">Switching already in progress</string>
+    <string name="error_null_bluetooth_client">Connecting to %1$s failed. Bluetooth LE might not be supported on your device.</string>
+    <string name="error_switching_power_failed">Failed to switch %1$s\'s power. It might not be supported.</string>
+    <string name="error_unexpected_disconnect">Unexpectedly disconnected from %1$s.</string>
+    <string name="error_connection_failed">Connection failed. Is %1$s in range?</string>
+    <string name="error_timed_out">Timed out switching %1$s\'s power.</string>
+    <string name="error_switching_already_in_progress">Switching %1$s already in progress</string>
 
     <string name="choose_theme">Choose theme</string>
     <string name="light">Light</string>
@@ -35,4 +35,6 @@
     <string name="send_feedback_email_subject">BOOM Switch Feedback</string>
     <string name="send_feedback_email_body">To submit feedback, please enter your message below and then send the email.\n\n</string>
     <string name="error_no_email_client">Please install an email app to send feedback</string>
+
+    <string name="create_shortcut_choose_speaker">Choose speaker for widget</string>
 </resources>

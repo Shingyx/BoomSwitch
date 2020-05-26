@@ -23,13 +23,19 @@
         </activity>
 
         <activity
-            android:name=".ui.ShortcutActivity"
+            android:name=".ui.CreateShortcutActivity"
             android:taskAffinity=".shortcut"
-            android:theme="@android:style/Theme.NoDisplay">
+            android:theme="@style/AppThemeDialog">
             <intent-filter>
                 <action android:name="android.intent.action.CREATE_SHORTCUT" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.ShortcutActivity"
+            android:exported="true"
+            android:taskAffinity=".shortcut"
+            android:theme="@android:style/Theme.NoDisplay" />
 
     </application>
 

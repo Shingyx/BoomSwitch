@@ -14,6 +14,13 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="AppThemeDialog" parent="Theme.MaterialComponents.DayNight.Dialog">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorSecondary">@color/primary</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
     <style name="ActionBarStyle" parent="Widget.MaterialComponents.ActionBar.PrimarySurface">
         <item name="background">@color/toolbar_color</item>
     </style>

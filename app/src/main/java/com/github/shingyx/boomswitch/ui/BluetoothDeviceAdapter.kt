@@ -11,9 +11,9 @@ import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.BluetoothDeviceInfo
 
 class BluetoothDeviceAdapter(
-    private val activity: Activity
+    private val activity: Activity,
+    private var devices: List<BluetoothDeviceInfo> = emptyList()
 ) : BaseAdapter(), Filterable {
-    private var devices = emptyList<BluetoothDeviceInfo>()
     private val filter = NoFilter()
 
     fun updateItems(items: List<BluetoothDeviceInfo>) {
