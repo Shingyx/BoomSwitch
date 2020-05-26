@@ -24,7 +24,7 @@ Simply select your BOOM speaker from the list of paired Bluetooth devices and th
 - BOOM 3
 - MEGABOOM 3
 - BOOM 2
-- MEGABOOM (unconfirmed)
+- MEGABOOM
 - BOOM (unconfirmed)
 - ROLL / ROLL 2 (unconfirmed)
 
