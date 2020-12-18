@@ -18,7 +18,7 @@
 
 The fastest way to remotely turn your UE BOOM Bluetooth speaker on and off!
 
-Simply select your BOOM speaker from the list of paired Bluetooth devices and then press Switch to turn it on or off. Alternatively, place the widget onto your home screen to switch the speaker on or off with a single tap.
+Simply select your UE BOOM speaker from the list of paired Bluetooth devices and then press Switch to turn it on or off. Alternatively, place the widget onto your home screen to switch the speaker on or off with a single tap.
 
 <b>Supported speakers</b>
 - BOOM 3
