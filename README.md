@@ -25,7 +25,7 @@ Simply select your UE BOOM speaker from the list of paired Bluetooth devices and
 - MEGABOOM 3
 - BOOM 2
 - MEGABOOM
-- BOOM (unconfirmed)
+- BOOM
 - ROLL / ROLL 2 (unconfirmed)
 
 <b>Unsupported speakers</b>
