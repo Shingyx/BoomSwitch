@@ -1,33 +1,51 @@
 package com.github.shingyx.boomswitch.ui
 
+import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.github.shingyx.boomswitch.BuildConfig
 import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.AppColorTheme
 import com.github.shingyx.boomswitch.data.BoomClient
 import com.github.shingyx.boomswitch.data.Preferences
+import com.github.shingyx.boomswitch.databinding.ActivityMainBinding
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
+    private lateinit var binding: ActivityMainBinding
     private lateinit var handler: Handler
     private lateinit var adapter: BluetoothDeviceAdapter
     private lateinit var bluetoothStateReceiver: BluetoothStateReceiver
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                updateBluetoothDevices()
+            } else {
+                MaterialAlertDialogBuilder(this)
+                    .setMessage(R.string.bluetooth_missing_permission_alert)
+                    .setPositiveButton(android.R.string.ok) { _, _ ->
+                        updateBluetoothDevices()
+                    }
+                    .show()
+            }
+        }
 
     private val bluetoothOffAlertDialog = lazy {
         MaterialAlertDialogBuilder(this)
@@ -38,33 +56,40 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        setSupportActionBar(toolbar)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setSupportActionBar(binding.toolbar)
 
-        handler = Handler()
+        handler = Handler(Looper.getMainLooper())
         adapter = BluetoothDeviceAdapter(this)
         bluetoothStateReceiver = BluetoothStateReceiver(this::updateBluetoothDevices)
 
-        select_speaker.setAdapter(adapter)
-        select_speaker.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
-            Preferences.bluetoothDeviceInfo = adapter.getItem(position)
-            switch_button.isEnabled = true
+        binding.selectSpeaker.setAdapter(adapter)
+        binding.selectSpeaker.onItemClickListener = AdapterView.OnItemClickListener { _, _, pos, _ ->
+            Preferences.bluetoothDeviceInfo = adapter.getItem(pos)
+            binding.switchButton.isEnabled = true
         }
-        select_speaker.setText(Preferences.bluetoothDeviceInfo?.toString())
-        select_speaker.requestFocus()
+        binding.selectSpeaker.setText(Preferences.bluetoothDeviceInfo?.toString())
+        binding.selectSpeaker.requestFocus()
 
-        switch_button.isEnabled = Preferences.bluetoothDeviceInfo != null
-        switch_button.setOnClickListener { launch { switchBoom() } }
+        binding.switchButton.isEnabled = Preferences.bluetoothDeviceInfo != null
+        binding.switchButton.setOnClickListener { launch { switchBoom() } }
 
-        version.text = getString(R.string.version, BuildConfig.VERSION_NAME)
+        binding.version.text = getString(R.string.version, BuildConfig.VERSION_NAME)
 
         registerReceiver(bluetoothStateReceiver, BluetoothStateReceiver.intentFilter())
+
+        if (!BoomClient.hasBluetoothConnectPermission(this)) {
+            requestPermissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        updateBluetoothDevices()
-        select_speaker.dismissDropDown()
+        binding.selectSpeaker.dismissDropDown()
+        if (BoomClient.hasBluetoothConnectPermission(this)) {
+            updateBluetoothDevices()
+        }
     }
 
     override fun onDestroy() {
@@ -93,22 +118,22 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
         handler.removeCallbacksAndMessages(null)
 
-        switch_button.isEnabled = false
-        fadeView(progress_bar, true)
-        progress_description.text = ""
-        fadeView(progress_description, true)
+        binding.switchButton.isEnabled = false
+        fadeView(binding.progressBar, true)
+        binding.progressDescription.text = ""
+        fadeView(binding.progressDescription, true)
 
         BoomClient.switchPower(this, deviceInfo) { progressMessage ->
             runOnUiThread {
-                progress_description.text = progressMessage
+                binding.progressDescription.text = progressMessage
             }
         }
 
-        switch_button.isEnabled = true
-        fadeView(progress_bar, false)
+        binding.switchButton.isEnabled = true
+        fadeView(binding.progressBar, false)
         handler.postDelayed({
-            fadeView(progress_description, false)
-        }, 4000)
+            fadeView(binding.progressDescription, false)
+        }, 10000)
     }
 
     private fun fadeView(view: View, show: Boolean) {
@@ -119,7 +144,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
             .setDuration(resources.getInteger(android.R.integer.config_shortAnimTime).toLong())
             .alpha(newAlpha)
             .setListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator?) {
+                override fun onAnimationEnd(animation: Animator) {
                     view.visibility = if (show) View.VISIBLE else View.GONE
                 }
             })
@@ -129,7 +154,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         var devicesInfo = BoomClient.getPairedDevicesInfo()
 
         if (devicesInfo == null) {
-            bluetoothOffAlertDialog.value.show()
+            if (!BoomClient.hasBluetoothConnectPermission(this)) {
+                requestPermissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
+            } else {
+                bluetoothOffAlertDialog.value.show()
+            }
             devicesInfo = emptyList()
         } else {
             if (bluetoothOffAlertDialog.isInitialized()) {
@@ -137,7 +166,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
             }
         }
 
-        select_speaker_container.error = if (devicesInfo.isEmpty()) {
+        binding.selectSpeakerContainer.error = if (devicesInfo.isEmpty()) {
             getString(R.string.no_devices_found)
         } else {
             null

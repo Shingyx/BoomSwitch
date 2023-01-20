@@ -26,8 +26,10 @@ class ShortcutActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         val deviceInfo = BluetoothDeviceInfo.createFromIntent(intent)
             ?: Preferences.bluetoothDeviceInfo
 
-        if (deviceInfo == null) {
-            updateToast(getString(R.string.select_speaker))
+        if (deviceInfo == null || !BoomClient.hasBluetoothConnectPermission(this)) {
+            if (deviceInfo == null) {
+                updateToast(getString(R.string.select_speaker))
+            }
             val intent = Intent(this, MainActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)

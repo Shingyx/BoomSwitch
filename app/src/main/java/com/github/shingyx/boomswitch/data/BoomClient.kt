@@ -1,5 +1,7 @@
 package com.github.shingyx.boomswitch.data
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothA2dp
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -7,8 +9,12 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothProfile
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Handler
+import android.os.Looper
 import androidx.annotation.StringRes
+import androidx.core.app.ActivityCompat
 import com.github.shingyx.boomswitch.R
 import kotlinx.coroutines.CompletableDeferred
 import timber.log.Timber
@@ -47,6 +53,7 @@ object BoomClient {
         inProgressMap.remove(deviceInfo.address)
     }
 
+    @SuppressLint("MissingPermission")
     fun getPairedDevicesInfo(): List<BluetoothDeviceInfo>? {
         try {
             val bondedDevices = BluetoothAdapter.getDefaultAdapter()
@@ -54,12 +61,20 @@ object BoomClient {
                 ?.bondedDevices
 
             if (bondedDevices != null) {
-                return bondedDevices.map { BluetoothDeviceInfo(it) }.sorted()
+                return bondedDevices.map { BluetoothDeviceInfo(it.name, it.address) }.sorted()
             }
         } catch (e: Exception) {
             Timber.e(e, "Failed to read bonded devices")
         }
         return null
+    }
+
+    fun hasBluetoothConnectPermission(context: Context): Boolean {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+                ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) == PackageManager.PERMISSION_GRANTED
     }
 }
 
@@ -80,12 +95,13 @@ private enum class SwitchAction {
     CONNECT_FOR_AUDIO,
 }
 
+@SuppressLint("MissingPermission")
 private class BoomClientInternal(
     private val context: Context,
     private val deviceInfo: BluetoothDeviceInfo,
     private val reportProgress: (String) -> Unit
 ) : GattCallbackWrapper() {
-    private val handler = Handler()
+    private val handler = Handler(Looper.getMainLooper())
     private val deferred = CompletableDeferred<Unit>()
     private var switchAction: SwitchAction? = null
 

@@ -5,6 +5,7 @@
     <string name="switch_text">Switch</string>
     <string name="version">Version %1$s</string>
     <string name="no_devices_found">No paired Bluetooth devices found!</string>
+    <string name="bluetooth_missing_permission_alert">BOOM Switch requires Bluetooth permissions to function.<br />You may need to reinstall the app if you have denied permissions more than once.</string>
     <string name="bluetooth_turned_off_alert">Bluetooth is turned off. Please turn Bluetooth on then come back to the app.</string>
     <string name="select_speaker">Please select your speaker first.</string>
 
@@ -20,7 +21,7 @@
     <string name="error_null_bluetooth_client">Connecting to %1$s failed. Bluetooth LE might not be supported on your device.</string>
     <string name="error_switching_power_failed">Failed to switch %1$s\'s power. It might not be supported.</string>
     <string name="error_unexpected_disconnect">Unexpectedly disconnected from %1$s.</string>
-    <string name="error_connection_failed">Connection failed. Is %1$s in range?</string>
+    <string name="error_connection_failed">Connection failed. %1$s might not be supported, or needs a firmware update using the official BOOM app.</string>
     <string name="error_timed_out">Timed out switching %1$s\'s power.</string>
     <string name="error_switching_already_in_progress">Switching %1$s already in progress</string>
 
