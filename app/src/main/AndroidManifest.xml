@@ -1,12 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.github.shingyx.boomswitch">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
 
     <application
         android:name=".BoomSwitchApplication"
-        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
@@ -15,6 +13,7 @@
 
         <activity
             android:name=".ui.MainActivity"
+            android:exported="true"
             android:theme="@style/AppThemeNoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,6 +23,7 @@
 
         <activity
             android:name=".ui.CreateShortcutActivity"
+            android:exported="true"
             android:taskAffinity=".shortcut"
             android:theme="@style/AppThemeDialog">
             <intent-filter>

@@ -119,7 +119,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
             .setDuration(resources.getInteger(android.R.integer.config_shortAnimTime).toLong())
             .alpha(newAlpha)
             .setListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator?) {
+                override fun onAnimationEnd(animation: Animator) {
                     view.visibility = if (show) View.VISIBLE else View.GONE
                 }
             })
