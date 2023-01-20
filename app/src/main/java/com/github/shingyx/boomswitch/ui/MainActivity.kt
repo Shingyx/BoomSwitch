@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -41,7 +42,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        handler = Handler()
+        handler = Handler(Looper.getMainLooper())
         adapter = BluetoothDeviceAdapter(this)
         bluetoothStateReceiver = BluetoothStateReceiver(this::updateBluetoothDevices)
 

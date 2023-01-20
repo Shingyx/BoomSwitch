@@ -39,4 +39,12 @@
 
     </application>
 
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <data android:scheme="mailto" />
+        </intent>
+    </queries>
+
 </manifest>
