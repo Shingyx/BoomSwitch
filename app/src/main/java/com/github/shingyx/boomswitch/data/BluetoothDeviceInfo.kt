@@ -1,14 +1,11 @@
 package com.github.shingyx.boomswitch.data
 
-import android.bluetooth.BluetoothDevice
 import android.content.Intent
 
 data class BluetoothDeviceInfo(
     val name: String,
     val address: String
 ) : Comparable<BluetoothDeviceInfo> {
-    constructor(device: BluetoothDevice) : this(device.name, device.address)
-
     override fun toString(): String {
         return name
     }

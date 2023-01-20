@@ -1,5 +1,6 @@
 package com.github.shingyx.boomswitch.data
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothA2dp
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -8,6 +9,7 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.os.Handler
+import android.os.Looper
 import androidx.annotation.StringRes
 import com.github.shingyx.boomswitch.R
 import kotlinx.coroutines.CompletableDeferred
@@ -47,6 +49,7 @@ object BoomClient {
         inProgressMap.remove(deviceInfo.address)
     }
 
+    @SuppressLint("MissingPermission")
     fun getPairedDevicesInfo(): List<BluetoothDeviceInfo>? {
         try {
             val bondedDevices = BluetoothAdapter.getDefaultAdapter()
@@ -54,7 +57,7 @@ object BoomClient {
                 ?.bondedDevices
 
             if (bondedDevices != null) {
-                return bondedDevices.map { BluetoothDeviceInfo(it) }.sorted()
+                return bondedDevices.map { BluetoothDeviceInfo(it.name, it.address) }.sorted()
             }
         } catch (e: Exception) {
             Timber.e(e, "Failed to read bonded devices")
@@ -80,12 +83,13 @@ private enum class SwitchAction {
     CONNECT_FOR_AUDIO,
 }
 
+@SuppressLint("MissingPermission")
 private class BoomClientInternal(
     private val context: Context,
     private val deviceInfo: BluetoothDeviceInfo,
     private val reportProgress: (String) -> Unit
 ) : GattCallbackWrapper() {
-    private val handler = Handler()
+    private val handler = Handler(Looper.getMainLooper())
     private val deferred = CompletableDeferred<Unit>()
     private var switchAction: SwitchAction? = null
 
