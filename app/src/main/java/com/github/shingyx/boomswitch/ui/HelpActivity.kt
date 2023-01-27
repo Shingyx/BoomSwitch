@@ -21,6 +21,14 @@ class HelpActivity : AppCompatActivity() {
             setTitle(R.string.help)
             setDisplayHomeAsUpEnabled(true)
         }
+
+        val adapter = SpeakerModelAdapter(this)
+        binding.selectSpeakerModel.setAdapter(adapter)
+        binding.selectSpeakerModel.onItemClickListener = adapterOnItemClick { position ->
+            val speakerModel = adapter.getItem(position)
+            binding.selectSpeakerModel.setText(speakerModel.modelStringRes)
+            updateHelpText(speakerModel)
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -29,6 +37,39 @@ class HelpActivity : AppCompatActivity() {
             return true
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun updateHelpText(speakerModel: SpeakerModel) {
+        // TODO actually make it a string res
+        val helpStringRes = when (speakerModel) {
+            SpeakerModel.BOOM_3,
+            SpeakerModel.BOOM_2,
+            SpeakerModel.BOOM,
+            SpeakerModel.MEGABOOM_3,
+            SpeakerModel.MEGABOOM -> {
+                "supported but may need to update firmware via BOOM app"
+            }
+            SpeakerModel.WONDERBOOM_3,
+            SpeakerModel.WONDERBOOM_2,
+            SpeakerModel.WONDERBOOM -> {
+                "not supported. speaker doesn't support it. no app available"
+            }
+            SpeakerModel.HYPERBOOM -> {
+                "not tested, use BOOM app if any issues"
+            }
+            SpeakerModel.BLAST,
+            SpeakerModel.MEGABLAST -> {
+                "not tested, use BLAST app if any issues"
+            }
+            SpeakerModel.ROLL_2,
+            SpeakerModel.ROLL -> {
+                "not tested, use ROLL app if any issues"
+            }
+            SpeakerModel.SOMETHING_ELSE -> {
+                "not supported. not a UE speaker"
+            }
+        }
+        binding.helpText.setText(helpStringRes)
     }
 
     private fun sendFeedback() {

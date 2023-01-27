@@ -10,7 +10,6 @@ import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.AdapterView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -64,11 +63,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         bluetoothStateReceiver = BluetoothStateReceiver(this::updateBluetoothDevices)
 
         binding.selectSpeaker.setAdapter(adapter)
-        binding.selectSpeaker.onItemClickListener =
-            AdapterView.OnItemClickListener { _, _, pos, _ ->
-                Preferences.bluetoothDeviceInfo = adapter.getItem(pos)
-                binding.switchButton.isEnabled = true
-            }
+        binding.selectSpeaker.onItemClickListener = adapterOnItemClick { position ->
+            Preferences.bluetoothDeviceInfo = adapter.getItem(position)
+            binding.switchButton.isEnabled = true
+        }
         binding.selectSpeaker.setText(Preferences.bluetoothDeviceInfo?.toString())
         binding.selectSpeaker.requestFocus()
 

@@ -38,4 +38,21 @@
     <string name="error_no_email_client">Please install an email app to send feedback</string>
 
     <string name="create_shortcut_choose_speaker">Choose speaker for widget</string>
+
+    <string name="speaker_boom">BOOM</string>
+    <string name="speaker_boom_2">BOOM 2</string>
+    <string name="speaker_boom_3">BOOM 3</string>
+    <string name="speaker_megaboom">MEGABOOM</string>
+    <string name="speaker_megaboom_3">MEGABOOM 3</string>
+    <string name="speaker_wonderboom">WONDERBOOM</string>
+    <string name="speaker_wonderboom_2">WONDERBOOM 2</string>
+    <string name="speaker_wonderboom_3">WONDERBOOM 3</string>
+    <string name="speaker_hyperboom">HYPERBOOM</string>
+    <string name="speaker_blast">BLAST</string>
+    <string name="speaker_megablast">MEGABLAST</string>
+    <string name="speaker_roll">ROLL</string>
+    <string name="speaker_roll_2">ROLL 2</string>
+    <string name="speaker_something_else">Something else</string>
+
+    <string name="help_intro">Having trouble connecting? Please select the model of your speaker below.</string>
 </resources>
