@@ -14,7 +14,7 @@
     <a href="https://github.com/Shingyx/BoomSwitch/actions?query=workflow%3A%22Android+CI%22+branch%3Amaster">
         <img src="https://github.com/Shingyx/BoomSwitch/workflows/Android%20CI/badge.svg?branch=master">
     </a>
-</h1>
+</p>
 
 The fastest way to remotely turn your UE BOOM Bluetooth speaker on and off!
 
@@ -29,7 +29,7 @@ Simply select your UE BOOM speaker from the list of paired Bluetooth devices and
 - ROLL / ROLL 2 (unconfirmed)
 
 <b>Unsupported speakers</b>
-- WONDERBOOM / WONDERBOOM 2
+- WONDERBOOM / WONDERBOOM 2 / WONDERBOOM 3
 - BLAST / MEGABLAST (unconfirmed)
 - HYPERBOOM (unconfirmed)
 
