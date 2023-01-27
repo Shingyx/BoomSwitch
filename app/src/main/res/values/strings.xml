@@ -32,7 +32,7 @@
 
     <string name="open_source_licenses">Open source licenses</string>
 
-    <string name="send_feedback">Send feedback</string>
+    <string name="help">Help</string>
     <string name="send_feedback_email_subject">BOOM Switch Feedback</string>
     <string name="send_feedback_email_body">To submit feedback, please enter your message below and then send the email.\n\n</string>
     <string name="error_no_email_client">Please install an email app to send feedback</string>

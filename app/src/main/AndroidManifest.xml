@@ -4,6 +4,14 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <data android:scheme="mailto" />
+        </intent>
+    </queries>
+
     <application
         android:name=".BoomSwitchApplication"
         android:icon="@mipmap/ic_launcher"
@@ -38,14 +46,10 @@
             android:taskAffinity=".shortcut"
             android:theme="@android:style/Theme.NoDisplay" />
 
-    </application>
+        <activity
+            android:name=".ui.HelpActivity"
+            android:exported="false" />
 
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.SENDTO" />
-            <category android:name="android.intent.category.DEFAULT" />
-            <data android:scheme="mailto" />
-        </intent>
-    </queries>
+    </application>
 
 </manifest>
