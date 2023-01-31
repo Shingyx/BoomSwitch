@@ -21,10 +21,9 @@ class HelpActivity : AppCompatActivity() {
 
         val adapter = SpeakerModelAdapter(this)
         binding.selectSpeakerModel.setAdapter(adapter)
-        binding.selectSpeakerModel.onItemClickListener = adapterOnItemClick { position ->
-            val speakerModel = adapter.getItem(position)
-            binding.selectSpeakerModel.setText(speakerModel.modelStringRes)
-            updateHelpText(speakerModel)
+        binding.selectSpeakerModel.onItemClickListener = adapterOnItemClick(adapter) { item ->
+            binding.selectSpeakerModel.setText(item.modelStringResId)
+            updateHelpText(item)
         }
     }
 
@@ -65,6 +64,6 @@ class HelpActivity : AppCompatActivity() {
                 R.string.help_text_not_supported_non_ue
             }
         }
-        binding.helpText.text = getString(helpStringRes, getString(speakerModel.modelStringRes))
+        binding.helpText.text = getString(helpStringRes, getString(speakerModel.modelStringResId))
     }
 }

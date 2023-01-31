@@ -63,8 +63,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         bluetoothStateReceiver = BluetoothStateReceiver(this::updateBluetoothDevices)
 
         binding.selectSpeaker.setAdapter(adapter)
-        binding.selectSpeaker.onItemClickListener = adapterOnItemClick { position ->
-            Preferences.bluetoothDeviceInfo = adapter.getItem(position)
+        binding.selectSpeaker.onItemClickListener = adapterOnItemClick(adapter) { item ->
+            Preferences.bluetoothDeviceInfo = item
             binding.switchButton.isEnabled = true
         }
         binding.selectSpeaker.setText(Preferences.bluetoothDeviceInfo?.toString())

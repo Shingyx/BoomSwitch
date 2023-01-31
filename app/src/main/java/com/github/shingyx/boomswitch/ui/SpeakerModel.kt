@@ -3,7 +3,7 @@ package com.github.shingyx.boomswitch.ui
 import androidx.annotation.StringRes
 import com.github.shingyx.boomswitch.R
 
-enum class SpeakerModel(@StringRes val modelStringRes: Int) {
+enum class SpeakerModel(@StringRes val modelStringResId: Int) {
     BOOM_3(R.string.speaker_boom_3),
     BOOM_2(R.string.speaker_boom_2),
     BOOM(R.string.speaker_boom),

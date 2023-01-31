@@ -2,10 +2,11 @@ package com.github.shingyx.boomswitch.ui
 
 import android.widget.AdapterView
 
-fun adapterOnItemClick(
-    onItemClick: (position: Int) -> Unit
+fun <T> adapterOnItemClick(
+    adapter: TypedAdapter<T>,
+    onItemClick: (item: T) -> Unit
 ): AdapterView.OnItemClickListener {
     return AdapterView.OnItemClickListener { _, _, position, _ ->
-        onItemClick(position)
+        onItemClick(adapter.getItem(position))
     }
 }

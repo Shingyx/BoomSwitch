@@ -3,7 +3,6 @@ package com.github.shingyx.boomswitch.ui
 import android.app.Activity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
 import android.widget.Filter
 import android.widget.Filterable
 import android.widget.TextView
@@ -13,7 +12,7 @@ import com.github.shingyx.boomswitch.data.BluetoothDeviceInfo
 class BluetoothDeviceAdapter(
     private val activity: Activity,
     private var devices: List<BluetoothDeviceInfo> = emptyList()
-) : BaseAdapter(), Filterable {
+) : TypedAdapter<BluetoothDeviceInfo>(), Filterable {
     private val filter = NoFilter()
 
     fun updateItems(items: List<BluetoothDeviceInfo>) {
