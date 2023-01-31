@@ -1,10 +1,7 @@
 package com.github.shingyx.boomswitch.ui
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.databinding.ActivityHelpBinding
@@ -69,19 +66,5 @@ class HelpActivity : AppCompatActivity() {
             }
         }
         binding.helpText.text = getString(helpStringRes, getString(speakerModel.modelStringRes))
-    }
-
-    private fun sendFeedback() {
-        val intent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:")
-            putExtra(Intent.EXTRA_EMAIL, arrayOf("shingyx.dev@gmail.com"))
-            putExtra(Intent.EXTRA_SUBJECT, getString(R.string.send_feedback_email_subject))
-            putExtra(Intent.EXTRA_TEXT, getString(R.string.send_feedback_email_body))
-        }
-        if (intent.resolveActivity(packageManager) != null) {
-            startActivity(intent)
-        } else {
-            Toast.makeText(this, R.string.error_no_email_client, Toast.LENGTH_LONG).show()
-        }
     }
 }
