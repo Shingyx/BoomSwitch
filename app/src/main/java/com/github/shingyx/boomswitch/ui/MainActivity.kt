@@ -4,14 +4,12 @@ import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.AdapterView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -65,8 +63,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         bluetoothStateReceiver = BluetoothStateReceiver(this::updateBluetoothDevices)
 
         binding.selectSpeaker.setAdapter(adapter)
-        binding.selectSpeaker.onItemClickListener = AdapterView.OnItemClickListener { _, _, pos, _ ->
-            Preferences.bluetoothDeviceInfo = adapter.getItem(pos)
+        binding.selectSpeaker.onItemClickListener = adapter.onItemClick { item ->
+            Preferences.bluetoothDeviceInfo = item
             binding.switchButton.isEnabled = true
         }
         binding.selectSpeaker.setText(Preferences.bluetoothDeviceInfo?.toString())
@@ -106,7 +104,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         when (item.itemId) {
             R.id.choose_theme -> chooseTheme()
             R.id.open_source_licenses -> showOpenSourceLicenses()
-            R.id.send_feedback -> sendFeedback()
+            R.id.help -> showHelp()
             else -> return super.onOptionsItemSelected(item)
         }
         return true
@@ -196,17 +194,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         startActivity(Intent(this, OssLicensesMenuActivity::class.java))
     }
 
-    private fun sendFeedback() {
-        val intent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:")
-            putExtra(Intent.EXTRA_EMAIL, arrayOf("shingyx.dev@gmail.com"))
-            putExtra(Intent.EXTRA_SUBJECT, getString(R.string.send_feedback_email_subject))
-            putExtra(Intent.EXTRA_TEXT, getString(R.string.send_feedback_email_body))
-        }
-        if (intent.resolveActivity(packageManager) != null) {
-            startActivity(intent)
-        } else {
-            Toast.makeText(this, R.string.error_no_email_client, Toast.LENGTH_LONG).show()
-        }
+    private fun showHelp() {
+        startActivity(Intent(this, HelpActivity::class.java))
     }
 }

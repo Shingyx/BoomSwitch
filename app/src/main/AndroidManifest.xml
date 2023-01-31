@@ -38,14 +38,10 @@
             android:taskAffinity=".shortcut"
             android:theme="@android:style/Theme.NoDisplay" />
 
-    </application>
+        <activity
+            android:name=".ui.HelpActivity"
+            android:exported="false" />
 
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.SENDTO" />
-            <category android:name="android.intent.category.DEFAULT" />
-            <data android:scheme="mailto" />
-        </intent>
-    </queries>
+    </application>
 
 </manifest>

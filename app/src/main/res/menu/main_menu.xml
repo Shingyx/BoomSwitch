@@ -9,7 +9,7 @@
         android:title="@string/open_source_licenses"
         app:showAsAction="never" />
     <item
-        android:id="@+id/send_feedback"
-        android:title="@string/send_feedback"
+        android:id="@+id/help"
+        android:title="@string/help"
         app:showAsAction="never" />
 </menu>

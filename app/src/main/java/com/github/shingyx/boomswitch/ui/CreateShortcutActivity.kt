@@ -3,7 +3,6 @@ package com.github.shingyx.boomswitch.ui
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.widget.AdapterView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.github.shingyx.boomswitch.R
@@ -33,8 +32,8 @@ class CreateShortcutActivity : AppCompatActivity() {
             ?: return finish()
 
         binding.speakerList.adapter = adapter
-        binding.speakerList.onItemClickListener = AdapterView.OnItemClickListener { _, _, pos, _ ->
-            val selectedSpeaker = adapter.getItem(pos).takeUnless {
+        binding.speakerList.onItemClickListener = adapter.onItemClick { item ->
+            val selectedSpeaker = item.takeUnless {
                 it == fakeUseLastSelectedSpeakerDevice
             }
             val intent = ShortcutActivity.createShortcutIntent(this, selectedSpeaker)

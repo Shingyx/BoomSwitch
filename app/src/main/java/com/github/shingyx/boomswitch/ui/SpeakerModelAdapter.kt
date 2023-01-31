@@ -7,28 +7,21 @@ import android.widget.Filter
 import android.widget.Filterable
 import android.widget.TextView
 import com.github.shingyx.boomswitch.R
-import com.github.shingyx.boomswitch.data.BluetoothDeviceInfo
 
-class BluetoothDeviceAdapter(
-    private val activity: Activity,
-    private var devices: List<BluetoothDeviceInfo> = emptyList()
-) : TypedAdapter<BluetoothDeviceInfo>(), Filterable {
+class SpeakerModelAdapter(private val activity: Activity) :
+    TypedAdapter<SpeakerModel>(), Filterable {
     private val filter = NoFilter()
-
-    fun updateItems(items: List<BluetoothDeviceInfo>) {
-        devices = items
-        notifyDataSetChanged()
-    }
+    private val speakerModels = SpeakerModel.values()
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
         val view = convertView
             ?: activity.layoutInflater.inflate(R.layout.dropdown_menu_popup_item, parent, false)
-        (view as TextView).text = devices[position].toString()
+        (view as TextView).setText(speakerModels[position].modelStringResId)
         return view
     }
 
-    override fun getItem(position: Int): BluetoothDeviceInfo {
-        return devices[position]
+    override fun getItem(position: Int): SpeakerModel {
+        return speakerModels[position]
     }
 
     override fun getItemId(position: Int): Long {
@@ -36,7 +29,7 @@ class BluetoothDeviceAdapter(
     }
 
     override fun getCount(): Int {
-        return devices.size
+        return speakerModels.size
     }
 
     override fun getFilter(): Filter {
@@ -46,8 +39,8 @@ class BluetoothDeviceAdapter(
     private inner class NoFilter : Filter() {
         override fun performFiltering(constraint: CharSequence?): FilterResults {
             return FilterResults().apply {
-                values = devices
-                count = devices.size
+                values = speakerModels
+                count = speakerModels.size
             }
         }
 
