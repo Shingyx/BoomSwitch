@@ -21,7 +21,7 @@ class HelpActivity : AppCompatActivity() {
 
         val adapter = SpeakerModelAdapter(this)
         binding.selectSpeakerModel.setAdapter(adapter)
-        binding.selectSpeakerModel.onItemClickListener = adapterOnItemClick(adapter) { item ->
+        binding.selectSpeakerModel.onItemClickListener = adapter.onItemClick { item ->
             binding.selectSpeakerModel.setText(item.modelStringResId)
             updateHelpText(item)
         }

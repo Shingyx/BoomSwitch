@@ -32,7 +32,7 @@ class CreateShortcutActivity : AppCompatActivity() {
             ?: return finish()
 
         binding.speakerList.adapter = adapter
-        binding.speakerList.onItemClickListener = adapterOnItemClick(adapter) { item ->
+        binding.speakerList.onItemClickListener = adapter.onItemClick { item ->
             val selectedSpeaker = item.takeUnless {
                 it == fakeUseLastSelectedSpeakerDevice
             }
