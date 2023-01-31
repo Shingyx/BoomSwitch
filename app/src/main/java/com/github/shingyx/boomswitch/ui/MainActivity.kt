@@ -4,6 +4,8 @@ import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -13,6 +15,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import com.github.shingyx.boomswitch.BuildConfig
 import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.AppColorTheme
@@ -31,19 +34,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     private lateinit var adapter: BluetoothDeviceAdapter
     private lateinit var bluetoothStateReceiver: BluetoothStateReceiver
 
-    private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            if (isGranted) {
-                updateBluetoothDevices()
-            } else {
-                MaterialAlertDialogBuilder(this)
-                    .setMessage(R.string.bluetooth_missing_permission_alert)
-                    .setPositiveButton(android.R.string.ok) { _, _ ->
-                        updateBluetoothDevices()
-                    }
-                    .show()
-            }
-        }
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+        this::handlePermissionsResponse
+    )
 
     private val bluetoothOffAlertDialog = lazy {
         MaterialAlertDialogBuilder(this)
@@ -77,8 +71,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
         registerReceiver(bluetoothStateReceiver, BluetoothStateReceiver.intentFilter())
 
+        val permissionsToRequest = mutableListOf<String>()
         if (!BoomClient.hasBluetoothConnectPermission(this)) {
-            requestPermissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
+            permissionsToRequest.add(Manifest.permission.BLUETOOTH_CONNECT)
+        }
+        if (!hasPostNotificationsPermission()) {
+            permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        if (permissionsToRequest.isNotEmpty()) {
+            requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
         }
     }
 
@@ -153,7 +154,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
         if (devicesInfo == null) {
             if (!BoomClient.hasBluetoothConnectPermission(this)) {
-                requestPermissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
+                requestPermissionLauncher.launch(arrayOf(Manifest.permission.BLUETOOTH_CONNECT))
             } else {
                 bluetoothOffAlertDialog.value.show()
             }
@@ -196,5 +197,42 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
     private fun showHelp() {
         startActivity(Intent(this, HelpActivity::class.java))
+    }
+
+    private fun hasPostNotificationsPermission(): Boolean {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                ActivityCompat.checkSelfPermission(
+                    this, Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun handlePermissionsResponse(permissions: Map<String, Boolean>) {
+        permissions.forEach { (permission, granted) ->
+            when (permission) {
+                Manifest.permission.BLUETOOTH_CONNECT -> {
+                    if (granted) {
+                        updateBluetoothDevices()
+                    } else {
+                        MaterialAlertDialogBuilder(this)
+                            .setMessage(R.string.bluetooth_missing_permission_alert)
+                            .setPositiveButton(android.R.string.ok) { _, _ ->
+                                updateBluetoothDevices()
+                            }
+                            .show()
+                    }
+                }
+                Manifest.permission.POST_NOTIFICATIONS -> {
+                    if (!granted && shouldShowRequestPermissionRationale(permission)) {
+                        MaterialAlertDialogBuilder(this)
+                            .setMessage(R.string.notification_missing_permission_alert)
+                            .setPositiveButton(android.R.string.ok) { _, _ ->
+                                requestPermissionLauncher.launch(arrayOf(permission))
+                            }
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .show()
+                    }
+                }
+            }
+        }
     }
 }

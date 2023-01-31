@@ -7,6 +7,7 @@
     <string name="no_devices_found">No paired Bluetooth devices found!</string>
     <string name="bluetooth_missing_permission_alert">BOOM Switch requires Bluetooth permissions to function.<br />You may need to reinstall the app if you have denied permissions more than once.</string>
     <string name="bluetooth_turned_off_alert">Bluetooth is turned off. Please turn Bluetooth on then come back to the app.</string>
+    <string name="notification_missing_permission_alert">Without allowing notifications, the widget will operate silently without toast notifications. Allow notifications?</string>
     <string name="select_speaker">Please select your speaker first.</string>
 
     <string name="connecting_to_speaker">Connecting to %1$s…</string>
