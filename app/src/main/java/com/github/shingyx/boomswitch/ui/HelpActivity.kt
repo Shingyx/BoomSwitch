@@ -40,36 +40,35 @@ class HelpActivity : AppCompatActivity() {
     }
 
     private fun updateHelpText(speakerModel: SpeakerModel) {
-        // TODO actually make it a string res
         val helpStringRes = when (speakerModel) {
             SpeakerModel.BOOM_3,
             SpeakerModel.BOOM_2,
             SpeakerModel.BOOM,
             SpeakerModel.MEGABOOM_3,
             SpeakerModel.MEGABOOM -> {
-                "supported but may need to update firmware via BOOM app"
+                R.string.help_text_supported
             }
             SpeakerModel.WONDERBOOM_3,
             SpeakerModel.WONDERBOOM_2,
             SpeakerModel.WONDERBOOM -> {
-                "not supported. speaker doesn't support it. no app available"
+                R.string.help_text_not_supported_wonderboom
             }
             SpeakerModel.HYPERBOOM -> {
-                "not tested, use BOOM app if any issues"
+                R.string.help_text_not_supported_hyperboom
             }
             SpeakerModel.BLAST,
             SpeakerModel.MEGABLAST -> {
-                "not tested, use BLAST app if any issues"
+                R.string.help_text_not_supported_blast
             }
             SpeakerModel.ROLL_2,
             SpeakerModel.ROLL -> {
-                "not tested, use ROLL app if any issues"
+                R.string.help_text_not_supported_roll
             }
             SpeakerModel.SOMETHING_ELSE -> {
-                "not supported. not a UE speaker"
+                R.string.help_text_not_supported_non_ue
             }
         }
-        binding.helpText.setText(helpStringRes)
+        binding.helpText.text = getString(helpStringRes, getString(speakerModel.modelStringRes))
     }
 
     private fun sendFeedback() {
