@@ -33,7 +33,7 @@ Simply select your UE BOOM speaker from the list of paired Bluetooth devices and
 - BLAST / MEGABLAST (unconfirmed)
 - HYPERBOOM (unconfirmed)
 
-Please raise a GitHub issue or send feedback in the app if you experience any issues or can help confirm support for any of the speakers listed above. The list of supported and unsupported speakers will be updated as more information is obtained. Your speaker may require a firmware update to work with this app.
+Please raise a GitHub issue or send an email if you experience any issues or can help confirm support for any of the speakers listed above. The list of supported and unsupported speakers will be updated as more information is obtained. Your speaker may require a firmware update to work with this app.
 
 Functionality is intentionally limited to switching the speaker's power to keep the app fast and lightweight. For more functionality or to update your speaker's firmware, please use the official BOOM app by Logitech: https://play.google.com/store/apps/details?id=com.logitech.ueboom
 
