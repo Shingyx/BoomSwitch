@@ -17,7 +17,7 @@ abstract class GattCallbackWrapper {
             onServicesDiscovered(status)
         }
 
-        override fun onCharacteristicRead(gatt: BluetoothGatt, char: BluetoothGattCharacteristic, value: ByteArray, status: Int) {
+        override fun onCharacteristicRead(gatt: BluetoothGatt, char: BluetoothGattCharacteristic, status: Int) {
             Timber.v("onCharacteristicRead: $status, ${char.uuid} = [${char.value?.joinToString()}]")
             onCharacteristicRead(char, status)
         }
