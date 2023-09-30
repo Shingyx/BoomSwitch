@@ -49,8 +49,9 @@ class HelpActivity : AppCompatActivity() {
             SpeakerModel.WONDERBOOM -> {
                 R.string.help_text_not_supported_wonderboom
             }
+            SpeakerModel.EPICBOOM,
             SpeakerModel.HYPERBOOM -> {
-                R.string.help_text_not_supported_hyperboom
+                R.string.help_text_not_supported_other_boom
             }
             SpeakerModel.BLAST,
             SpeakerModel.MEGABLAST -> {

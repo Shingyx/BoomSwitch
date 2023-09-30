@@ -31,6 +31,7 @@ Simply select your UE BOOM speaker from the list of paired Bluetooth devices and
 <b>Unsupported speakers</b>
 - WONDERBOOM / WONDERBOOM 2 / WONDERBOOM 3
 - BLAST / MEGABLAST (unconfirmed)
+- EPICBOOM (unconfirmed)
 - HYPERBOOM (unconfirmed)
 
 Please raise a GitHub issue or send an email if you experience any issues or can help confirm support for any of the speakers listed above. The list of supported and unsupported speakers will be updated as more information is obtained. Your speaker may require a firmware update to work with this app.

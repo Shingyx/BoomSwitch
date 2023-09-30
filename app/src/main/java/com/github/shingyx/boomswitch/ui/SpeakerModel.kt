@@ -12,6 +12,7 @@ enum class SpeakerModel(@StringRes val modelStringResId: Int) {
     WONDERBOOM_3(R.string.speaker_wonderboom_3),
     WONDERBOOM_2(R.string.speaker_wonderboom_2),
     WONDERBOOM(R.string.speaker_wonderboom),
+    EPICBOOM(R.string.speaker_epicboom),
     HYPERBOOM(R.string.speaker_hyperboom),
     BLAST(R.string.speaker_blast),
     MEGABLAST(R.string.speaker_megablast),
