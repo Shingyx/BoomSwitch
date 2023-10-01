@@ -34,12 +34,12 @@ class ShortcutActivity : AppCompatActivity(), CoroutineScope by MainScope() {
             intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             startActivity(intent)
         } else {
-            launch { switchBoom(deviceInfo) }
+            launch { disableRemotePower(deviceInfo) }
         }
     }
 
-    private suspend fun switchBoom(deviceInfo: BluetoothDeviceInfo) {
-        BoomClient.switchPower(this, deviceInfo) { progressMessage ->
+    private suspend fun disableRemotePower(deviceInfo: BluetoothDeviceInfo) {
+        BoomClient.disableRemotePower(this, deviceInfo) { progressMessage ->
             runOnUiThread {
                 updateToast(progressMessage)
             }

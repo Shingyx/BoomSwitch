@@ -29,27 +29,26 @@ private val READ_STATE_UUID = UUID.fromString("4356a21c-a599-4b94-a1c8-4b91fca02
 private const val BOOM_INACTIVE_STATE = 0.toByte()
 
 // WRITE_POWER_UUID values
-private const val BOOM_POWER_ON = 1.toByte()
-private const val BOOM_POWER_OFF = 2.toByte()
+private const val BOOM_DISABLE_REMOTE_POWER = 0.toByte()
 
 private const val TIMEOUT = 15000L
 
 object BoomClient {
     private val inProgressMap = ConcurrentHashMap<String, Unit>()
 
-    suspend fun switchPower(
+    suspend fun disableRemotePower(
         context: Context,
         deviceInfo: BluetoothDeviceInfo,
         reportProgress: (String) -> Unit
     ) {
         if (inProgressMap.putIfAbsent(deviceInfo.address, Unit) != null) {
-            Timber.w("Switching already in progress")
+            Timber.w("Disabling already in progress")
             return reportProgress(
-                context.getString(R.string.error_switching_already_in_progress, deviceInfo.name)
+                context.getString(R.string.error_disabling_already_in_progress, deviceInfo.name)
             )
         }
 
-        BoomClientInternal(context, deviceInfo, reportProgress).switchPower()
+        BoomClientInternal(context, deviceInfo, reportProgress).disableRemotePower()
         inProgressMap.remove(deviceInfo.address)
     }
 
@@ -89,12 +88,6 @@ private enum class BoomClientState {
     COMPLETED,
 }
 
-private enum class SwitchAction {
-    POWER_ON,
-    POWER_OFF,
-    CONNECT_FOR_AUDIO,
-}
-
 @SuppressLint("MissingPermission")
 private class BoomClientInternal(
     private val context: Context,
@@ -103,7 +96,6 @@ private class BoomClientInternal(
 ) : GattCallbackWrapper() {
     private val handler = Handler(Looper.getMainLooper())
     private val deferred = CompletableDeferred<Unit>()
-    private var switchAction: SwitchAction? = null
 
     private lateinit var bluetoothAdapter: BluetoothAdapter
     private lateinit var device: BluetoothDevice
@@ -116,13 +108,13 @@ private class BoomClientInternal(
             when (value) {
                 BoomClientState.CONNECTING -> R.string.connecting_to_speaker
                 BoomClientState.CONNECTING_RETRY -> R.string.retry_connecting_to_speaker
-                BoomClientState.DISCOVERING_SERVICES -> R.string.switching_speakers_power
+                BoomClientState.DISCOVERING_SERVICES -> R.string.disabling_speakers_power
                 else -> null
             }?.let { reportProgress(context.getString(it, deviceInfo.name)) }
             field = value
         }
 
-    suspend fun switchPower() {
+    suspend fun disableRemotePower() {
         if (boomClientState == BoomClientState.NOT_STARTED) {
             handler.postDelayed(this::onTimedOut, TIMEOUT)
             initializeConnection()
@@ -133,23 +125,16 @@ private class BoomClientInternal(
     private fun resolve() {
         teardown()
 
-        // Add a delay to complete the deferred at the same time the speaker plays a sound
-        // and reduce the likelihood of issues on reconnect
-        val delay = if (switchAction != SwitchAction.POWER_OFF) 2500L else 1000L
+        val delay = 1000L
         handler.postDelayed({
-            Timber.i("Resolving deferred with $switchAction")
-            val resId = when (switchAction!!) {
-                SwitchAction.POWER_ON -> R.string.boom_switched_on
-                SwitchAction.POWER_OFF -> R.string.boom_switched_off
-                SwitchAction.CONNECT_FOR_AUDIO -> R.string.boom_connected_for_audio
-            }
-            reportProgress(context.getString(resId, deviceInfo.name))
+            Timber.i("Resolving deferred")
+            reportProgress(context.getString(R.string.boom_remote_power_disabled, deviceInfo.name))
             deferred.complete(Unit)
         }, delay)
     }
 
     private fun reject(message: String, @StringRes resId: Int) {
-        Timber.w(Exception(message), "Failed to switch power")
+        Timber.w(Exception(message), "Failed to disable")
         teardown()
         reportProgress(context.getString(resId, deviceInfo.name))
         deferred.complete(Unit)
@@ -178,7 +163,7 @@ private class BoomClientInternal(
 
     /**
      * Initiates connecting to the speaker's Gatt server.
-     * Called by entry function [switchPower] and continued by [onConnectionStateChange].
+     * Called by entry function [disableRemotePower] and continued by [onConnectionStateChange].
      */
     private fun initializeConnection() {
         boomClientState = BoomClientState.CONNECTING
@@ -220,7 +205,7 @@ private class BoomClientInternal(
         boomClientState = BoomClientState.DISCOVERING_SERVICES
 
         if (!gatt.discoverServices()) {
-            reject("discoverServices failed", R.string.error_switching_power_failed)
+            reject("discoverServices failed", R.string.error_disabling_power_failed)
         }
     }
 
@@ -233,7 +218,7 @@ private class BoomClientInternal(
 
         val stateCharacteristic = gatt.getService(SERVICE_UUID)?.getCharacteristic(READ_STATE_UUID)
         if (stateCharacteristic == null || !gatt.readCharacteristic(stateCharacteristic)) {
-            reject("readCharacteristic failed", R.string.error_switching_power_failed)
+            reject("readCharacteristic failed", R.string.error_disabling_power_failed)
         }
     }
 
@@ -244,21 +229,7 @@ private class BoomClientInternal(
     private fun writePowerCharacteristic(speakerIsInactive: Boolean) {
         boomClientState = BoomClientState.WRITING_POWER
 
-        val powerByteValue: Byte
-
-        if (speakerIsInactive) {
-            switchAction = SwitchAction.POWER_ON
-            powerByteValue = BOOM_POWER_ON
-        } else {
-            val isConnectedForAudio = bluetoothA2dp?.connectedDevices?.contains(device) == true
-            if (isConnectedForAudio) {
-                switchAction = SwitchAction.POWER_OFF
-                powerByteValue = BOOM_POWER_OFF
-            } else {
-                switchAction = SwitchAction.CONNECT_FOR_AUDIO
-                powerByteValue = BOOM_POWER_ON // "Power on" will connect the speaker for audio
-            }
-        }
+        val powerByteValue = BOOM_DISABLE_REMOTE_POWER
 
         val powerCharacteristic = gatt.getService(SERVICE_UUID)?.getCharacteristic(WRITE_POWER_UUID)
         if (powerCharacteristic != null) {
@@ -268,7 +239,7 @@ private class BoomClientInternal(
             }
         }
 
-        reject("writeCharacteristic failed", R.string.error_switching_power_failed)
+        reject("writeCharacteristic failed", R.string.error_disabling_power_failed)
     }
 
     /**
@@ -301,7 +272,7 @@ private class BoomClientInternal(
 
     override fun onServicesDiscovered(status: Int) {
         if (status != BluetoothGatt.GATT_SUCCESS) {
-            reject("onServicesDiscovered status is $status", R.string.error_switching_power_failed)
+            reject("onServicesDiscovered status is $status", R.string.error_disabling_power_failed)
             return
         }
 
@@ -310,7 +281,7 @@ private class BoomClientInternal(
 
     override fun onCharacteristicRead(characteristic: BluetoothGattCharacteristic, status: Int) {
         if (status != BluetoothGatt.GATT_SUCCESS) {
-            reject("onCharacteristicRead status is $status", R.string.error_switching_power_failed)
+            reject("onCharacteristicRead status is $status", R.string.error_disabling_power_failed)
             return
         }
 
@@ -320,8 +291,13 @@ private class BoomClientInternal(
 
     override fun onCharacteristicWrite(characteristic: BluetoothGattCharacteristic, status: Int) {
         if (status != BluetoothGatt.GATT_SUCCESS) {
-            reject("onCharacteristicWrite status is $status", R.string.error_switching_power_failed)
-            return
+            if (status == 133) {
+                // 133 error seems to be a successful disable
+                Timber.i("Ignoring onCharacteristicWrite 133 status")
+            } else {
+                reject("onCharacteristicWrite status is $status", R.string.error_disabling_power_failed)
+                return
+            }
         }
 
         disconnectSpeaker()

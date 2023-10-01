@@ -1,30 +1,28 @@
 <resources>
-    <string name="app_name">BOOM Switch</string>
+    <string name="app_name">BOOM Disable Switch</string>
 
     <string name="boom_speaker">BOOM Speaker</string>
-    <string name="switch_text">Switch</string>
+    <string name="disable_text">Disable</string>
     <string name="version">Version %1$s</string>
     <string name="no_devices_found">No paired Bluetooth devices found!</string>
-    <string name="bluetooth_missing_permission_alert">BOOM Switch requires Bluetooth permissions to function.<br />You may need to reinstall the app if you have denied permissions more than once.</string>
+    <string name="bluetooth_missing_permission_alert">BOOM Disable Switch requires Bluetooth permissions to function.<br />You may need to reinstall the app if you have denied permissions more than once.</string>
     <string name="bluetooth_turned_off_alert">Bluetooth is turned off. Please turn Bluetooth on then come back to the app.</string>
     <string name="notification_missing_permission_alert">Without allowing notifications, the widget will operate silently without toast notifications. Allow notifications?</string>
     <string name="select_speaker">Please select your speaker first.</string>
 
     <string name="connecting_to_speaker">Connecting to %1$s…</string>
     <string name="retry_connecting_to_speaker">Retrying connection with %1$s…</string>
-    <string name="switching_speakers_power">Switching %1$s\'s power…</string>
-    <string name="boom_switched_on">%1$s switched on!</string>
-    <string name="boom_switched_off">%1$s switched off!</string>
-    <string name="boom_connected_for_audio">%1$s connected for audio!</string>
+    <string name="disabling_speakers_power">Disabling %1$s\'s remote power…</string>
+    <string name="boom_remote_power_disabled">Disabled %1$s\'s remote power</string>
 
     <string name="error_bluetooth_disabled">Bluetooth is turned off. Please turn Bluetooth on then try again.</string>
     <string name="error_speaker_unpaired">Could not find %1$s. Has it been unpaired?</string>
     <string name="error_null_bluetooth_client">Connecting to %1$s failed. Bluetooth LE might not be supported on your device.</string>
-    <string name="error_switching_power_failed">Failed to switch %1$s\'s power. It might not be supported.</string>
+    <string name="error_disabling_power_failed">Failed to disable %1$s\'s remote power. It might not be supported.</string>
     <string name="error_unexpected_disconnect">Unexpectedly disconnected from %1$s.</string>
     <string name="error_connection_failed">Connection failed. %1$s might not be supported, or needs a firmware update using the official BOOM app.</string>
-    <string name="error_timed_out">Timed out switching %1$s\'s power.</string>
-    <string name="error_switching_already_in_progress">Switching %1$s already in progress</string>
+    <string name="error_timed_out">Timed out disabling %1$s\'s power.</string>
+    <string name="error_disabling_already_in_progress">Disabling %1$s\'s remote power already in progress</string>
 
     <string name="choose_theme">Choose theme</string>
     <string name="light">Light</string>

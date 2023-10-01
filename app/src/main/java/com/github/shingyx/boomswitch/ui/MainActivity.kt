@@ -59,13 +59,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         binding.selectSpeaker.setAdapter(adapter)
         binding.selectSpeaker.onItemClickListener = adapter.onItemClick { item ->
             Preferences.bluetoothDeviceInfo = item
-            binding.switchButton.isEnabled = true
+            binding.disableButton.isEnabled = true
         }
         binding.selectSpeaker.setText(Preferences.bluetoothDeviceInfo?.toString())
         binding.selectSpeaker.requestFocus()
 
-        binding.switchButton.isEnabled = Preferences.bluetoothDeviceInfo != null
-        binding.switchButton.setOnClickListener { launch { switchBoom() } }
+        binding.disableButton.isEnabled = Preferences.bluetoothDeviceInfo != null
+        binding.disableButton.setOnClickListener { launch { disableRemotePower() } }
 
         binding.version.text = getString(R.string.version, BuildConfig.VERSION_NAME)
 
@@ -111,24 +111,24 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         return true
     }
 
-    private suspend fun switchBoom() {
+    private suspend fun disableRemotePower() {
         val deviceInfo = Preferences.bluetoothDeviceInfo
             ?: return Toast.makeText(this, R.string.select_speaker, Toast.LENGTH_LONG).show()
 
         handler.removeCallbacksAndMessages(null)
 
-        binding.switchButton.isEnabled = false
+        binding.disableButton.isEnabled = false
         fadeView(binding.progressBar, true)
         binding.progressDescription.text = ""
         fadeView(binding.progressDescription, true)
 
-        BoomClient.switchPower(this, deviceInfo) { progressMessage ->
+        BoomClient.disableRemotePower(this, deviceInfo) { progressMessage ->
             runOnUiThread {
                 binding.progressDescription.text = progressMessage
             }
         }
 
-        binding.switchButton.isEnabled = true
+        binding.disableButton.isEnabled = true
         fadeView(binding.progressBar, false)
         handler.postDelayed({
             fadeView(binding.progressDescription, false)
