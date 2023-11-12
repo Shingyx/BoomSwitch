@@ -16,6 +16,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.github.shingyx.boomswitch.BuildConfig
 import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.AppColorTheme
@@ -64,12 +65,18 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         binding.selectSpeaker.setText(Preferences.bluetoothDeviceInfo?.toString())
         binding.selectSpeaker.requestFocus()
 
-        binding.switchButton.isEnabled = Preferences.bluetoothDeviceInfo != null
+        binding.switchButton.isEnabled =
+            Preferences.bluetoothDeviceInfo != null && BoomClient.hasBluetoothConnectPermission(this)
         binding.switchButton.setOnClickListener { launch { switchBoom() } }
 
         binding.version.text = getString(R.string.version, BuildConfig.VERSION_NAME)
 
-        registerReceiver(bluetoothStateReceiver, BluetoothStateReceiver.intentFilter())
+        ContextCompat.registerReceiver(
+            this,
+            bluetoothStateReceiver,
+            BluetoothStateReceiver.intentFilter(),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
 
         val permissionsToRequest = mutableListOf<String>()
         if (!BoomClient.hasBluetoothConnectPermission(this)) {
