@@ -12,7 +12,7 @@
     </a>
     &nbsp;
     <a href="https://github.com/Shingyx/BoomSwitch/actions?query=workflow%3A%22Android+CI%22+branch%3Amaster">
-        <img src="https://github.com/Shingyx/BoomSwitch/workflows/Android%20CI/badge.svg?branch=master">
+        <img src="https://github.com/Shingyx/BoomSwitch/workflows/Android%20CI/badge.svg">
     </a>
 </p>
 
