@@ -20,11 +20,11 @@ android {
             keyPassword keystoreProperties['keyPassword']
         }
     }
-    compileSdk 33
+    compileSdk 34
     defaultConfig {
         applicationId "com.github.shingyx.boomswitch"
         minSdk 23
-        targetSdk 33
+        targetSdk 34
         versionCode 11
         versionName "1.7"
     }
