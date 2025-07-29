@@ -3,6 +3,7 @@ package com.github.shingyx.boomswitch.data
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.edit
 
 object Preferences {
     private const val SHARED_PREFERENCES_NAME = "BoomSwitchData"
@@ -19,10 +20,10 @@ object Preferences {
             return BluetoothDeviceInfo(name, address)
         }
         set(value) {
-            sharedPreferences.edit()
-                .putString(KEY_DEVICE_NAME, value?.name)
-                .putString(KEY_DEVICE_ADDRESS, value?.address)
-                .apply()
+            sharedPreferences.edit {
+                putString(KEY_DEVICE_NAME, value?.name)
+                putString(KEY_DEVICE_ADDRESS, value?.address)
+            }
         }
 
     var appColorTheme: AppColorTheme
@@ -31,9 +32,9 @@ object Preferences {
             return AppColorTheme.fromNightModeValue(nightModeValue)
         }
         set(value) {
-            sharedPreferences.edit()
-                .putInt(KEY_NIGHT_MODE, value.nightModeValue)
-                .apply()
+            sharedPreferences.edit {
+                putInt(KEY_NIGHT_MODE, value.nightModeValue)
+            }
         }
 
     fun initialize(context: Context) {
