@@ -11,6 +11,10 @@
         <img alt='Get it on Google Play' src='.github/play-store-badge-no-padding.png' height='40'>
     </a>
     &nbsp;
+    <a href='https://apt.izzysoft.de/packages/com.github.shingyx.boomswitch'>
+        <img alt='Get it at IzzyOnDroid' src='https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroidButtonGreyBorder_nofont.png' height='40'>
+    </a>
+    &nbsp;
     <a href="https://github.com/Shingyx/BoomSwitch/actions?query=workflow%3A%22Android+CI%22+branch%3Amaster">
         <img src="https://github.com/Shingyx/BoomSwitch/workflows/Android%20CI/badge.svg">
     </a>
