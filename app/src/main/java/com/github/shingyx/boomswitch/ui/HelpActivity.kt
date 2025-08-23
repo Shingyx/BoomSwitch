@@ -13,6 +13,8 @@ class HelpActivity : AppCompatActivity() {
     super.onCreate(savedInstanceState)
     binding = ActivityHelpBinding.inflate(layoutInflater)
     setContentView(binding.root)
+    setSupportActionBar(binding.toolbar)
+    setSystemBarColors(this, binding.root)
 
     supportActionBar?.run {
       setTitle(R.string.help)
