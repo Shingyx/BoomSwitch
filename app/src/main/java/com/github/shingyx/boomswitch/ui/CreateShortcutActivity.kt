@@ -14,7 +14,7 @@ class CreateShortcutActivity : AppCompatActivity() {
   private lateinit var binding: ActivityCreateShortcutBinding
 
   private val fakeUseLastSelectedSpeakerDevice =
-      BluetoothDeviceInfo("Use last selected speaker", "")
+    BluetoothDeviceInfo("Use last selected speaker", "")
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -31,12 +31,12 @@ class CreateShortcutActivity : AppCompatActivity() {
 
     binding.speakerList.adapter = adapter
     binding.speakerList.onItemClickListener =
-        adapter.onItemClick { item ->
-          val selectedSpeaker = item.takeUnless { it == fakeUseLastSelectedSpeakerDevice }
-          val intent = ShortcutActivity.createShortcutIntent(this, selectedSpeaker)
-          setResult(RESULT_OK, intent)
-          finish()
-        }
+      adapter.onItemClick { item ->
+        val selectedSpeaker = item.takeUnless { it == fakeUseLastSelectedSpeakerDevice }
+        val intent = ShortcutActivity.createShortcutIntent(this, selectedSpeaker)
+        setResult(RESULT_OK, intent)
+        finish()
+      }
   }
 
   private fun createBluetoothDeviceAdapter(): BluetoothDeviceAdapter? {

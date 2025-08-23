@@ -3,7 +3,7 @@ package com.github.shingyx.boomswitch.data
 import android.content.Intent
 
 data class BluetoothDeviceInfo(val name: String, val address: String) :
-    Comparable<BluetoothDeviceInfo> {
+  Comparable<BluetoothDeviceInfo> {
   override fun toString(): String {
     return name
   }

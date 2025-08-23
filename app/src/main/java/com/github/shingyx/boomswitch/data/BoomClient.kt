@@ -38,14 +38,15 @@ object BoomClient {
   private val inProgressMap = ConcurrentHashMap<String, Unit>()
 
   suspend fun switchPower(
-      context: Context,
-      deviceInfo: BluetoothDeviceInfo,
-      reportProgress: (String) -> Unit
+    context: Context,
+    deviceInfo: BluetoothDeviceInfo,
+    reportProgress: (String) -> Unit,
   ) {
     if (inProgressMap.putIfAbsent(deviceInfo.address, Unit) != null) {
       Timber.w("Switching already in progress")
       return reportProgress(
-          context.getString(R.string.error_switching_already_in_progress, deviceInfo.name))
+        context.getString(R.string.error_switching_already_in_progress, deviceInfo.name)
+      )
     }
 
     BoomClientInternal(context, deviceInfo, reportProgress).switchPower()
@@ -56,7 +57,7 @@ object BoomClient {
   fun getPairedDevicesInfo(): List<BluetoothDeviceInfo>? {
     try {
       val bondedDevices =
-          BluetoothAdapter.getDefaultAdapter()?.takeIf { it.isEnabled }?.bondedDevices
+        BluetoothAdapter.getDefaultAdapter()?.takeIf { it.isEnabled }?.bondedDevices
 
       if (bondedDevices != null) {
         return bondedDevices.map { BluetoothDeviceInfo(it.name, it.address) }.sorted()
@@ -69,8 +70,8 @@ object BoomClient {
 
   fun hasBluetoothConnectPermission(context: Context): Boolean {
     return Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
-        ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) ==
-            PackageManager.PERMISSION_GRANTED
+      ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) ==
+        PackageManager.PERMISSION_GRANTED
   }
 }
 
@@ -93,9 +94,9 @@ private enum class SwitchAction {
 
 @SuppressLint("MissingPermission")
 private class BoomClientInternal(
-    private val context: Context,
-    private val deviceInfo: BluetoothDeviceInfo,
-    private val reportProgress: (String) -> Unit
+  private val context: Context,
+  private val deviceInfo: BluetoothDeviceInfo,
+  private val reportProgress: (String) -> Unit,
 ) : GattCallbackWrapper() {
   private val handler = Handler(Looper.getMainLooper())
   private val deferred = CompletableDeferred<Unit>()
@@ -133,18 +134,19 @@ private class BoomClientInternal(
     // and reduce the likelihood of issues on reconnect
     val delay = if (switchAction != SwitchAction.POWER_OFF) 2500L else 1000L
     handler.postDelayed(
-        {
-          Timber.i("Resolving deferred with $switchAction")
-          val resId =
-              when (switchAction!!) {
-                SwitchAction.POWER_ON -> R.string.boom_switched_on
-                SwitchAction.POWER_OFF -> R.string.boom_switched_off
-                SwitchAction.CONNECT_FOR_AUDIO -> R.string.boom_connected_for_audio
-              }
-          reportProgress(context.getString(resId, deviceInfo.name))
-          deferred.complete(Unit)
-        },
-        delay)
+      {
+        Timber.i("Resolving deferred with $switchAction")
+        val resId =
+          when (switchAction!!) {
+            SwitchAction.POWER_ON -> R.string.boom_switched_on
+            SwitchAction.POWER_OFF -> R.string.boom_switched_off
+            SwitchAction.CONNECT_FOR_AUDIO -> R.string.boom_connected_for_audio
+          }
+        reportProgress(context.getString(resId, deviceInfo.name))
+        deferred.complete(Unit)
+      },
+      delay,
+    )
   }
 
   private fun reject(message: String, @StringRes resId: Int) {
@@ -167,12 +169,14 @@ private class BoomClientInternal(
 
   private fun onTimedOut() {
     val resId =
-        if (boomClientState == BoomClientState.CONNECTING ||
-            boomClientState == BoomClientState.CONNECTING_RETRY) {
-          R.string.error_connection_failed
-        } else {
-          R.string.error_timed_out
-        }
+      if (
+        boomClientState == BoomClientState.CONNECTING ||
+          boomClientState == BoomClientState.CONNECTING_RETRY
+      ) {
+        R.string.error_connection_failed
+      } else {
+        R.string.error_timed_out
+      }
     reject("Timed out in state $boomClientState", resId)
   }
 
@@ -184,34 +188,35 @@ private class BoomClientInternal(
     boomClientState = BoomClientState.CONNECTING
 
     bluetoothAdapter =
-        BluetoothAdapter.getDefaultAdapter()?.takeIf { it.isEnabled }
-            ?: return reject("Bluetooth disabled", R.string.error_bluetooth_disabled)
+      BluetoothAdapter.getDefaultAdapter()?.takeIf { it.isEnabled }
+        ?: return reject("Bluetooth disabled", R.string.error_bluetooth_disabled)
 
     device =
-        bluetoothAdapter.bondedDevices.find { it.address == deviceInfo.address }
-            ?: return reject("Speaker not paired", R.string.error_speaker_unpaired)
+      bluetoothAdapter.bondedDevices.find { it.address == deviceInfo.address }
+        ?: return reject("Speaker not paired", R.string.error_speaker_unpaired)
 
     gatt =
-        device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
-            ?: return reject("connectGatt returned null", R.string.error_null_bluetooth_client)
+      device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
+        ?: return reject("connectGatt returned null", R.string.error_null_bluetooth_client)
 
     bluetoothAdapter.getProfileProxy(
-        context.applicationContext,
-        object : BluetoothProfile.ServiceListener {
-          override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
-            Timber.v("getProfileProxy onServiceConnected")
-            // Note: small risk of Gatt process completing before bluetoothA2dp is assigned
-            bluetoothA2dp = proxy as BluetoothA2dp
-            if (boomClientState == BoomClientState.COMPLETED) {
-              bluetoothAdapter.closeProfileProxy(BluetoothProfile.A2DP, bluetoothA2dp)
-            }
+      context.applicationContext,
+      object : BluetoothProfile.ServiceListener {
+        override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
+          Timber.v("getProfileProxy onServiceConnected")
+          // Note: small risk of Gatt process completing before bluetoothA2dp is assigned
+          bluetoothA2dp = proxy as BluetoothA2dp
+          if (boomClientState == BoomClientState.COMPLETED) {
+            bluetoothAdapter.closeProfileProxy(BluetoothProfile.A2DP, bluetoothA2dp)
           }
+        }
 
-          override fun onServiceDisconnected(profile: Int) {
-            Timber.v("getProfileProxy onServiceDisconnected")
-          }
-        },
-        BluetoothProfile.A2DP)
+        override fun onServiceDisconnected(profile: Int) {
+          Timber.v("getProfileProxy onServiceDisconnected")
+        }
+      },
+      BluetoothProfile.A2DP,
+    )
   }
 
   /**

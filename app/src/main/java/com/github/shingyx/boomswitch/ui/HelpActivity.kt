@@ -22,10 +22,10 @@ class HelpActivity : AppCompatActivity() {
     val adapter = SpeakerModelAdapter(this)
     binding.selectSpeakerModel.setAdapter(adapter)
     binding.selectSpeakerModel.onItemClickListener =
-        adapter.onItemClick { item ->
-          binding.selectSpeakerModel.setText(item.modelStringResId)
-          updateHelpText(item)
-        }
+      adapter.onItemClick { item ->
+        binding.selectSpeakerModel.setText(item.modelStringResId)
+        updateHelpText(item)
+      }
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -38,35 +38,35 @@ class HelpActivity : AppCompatActivity() {
 
   private fun updateHelpText(speakerModel: SpeakerModel) {
     val helpStringRes =
-        when (speakerModel) {
-          SpeakerModel.BOOM_3,
-          SpeakerModel.BOOM_2,
-          SpeakerModel.BOOM,
-          SpeakerModel.MEGABOOM_3,
-          SpeakerModel.MEGABOOM -> {
-            R.string.help_text_supported
-          }
-          SpeakerModel.WONDERBOOM_3,
-          SpeakerModel.WONDERBOOM_2,
-          SpeakerModel.WONDERBOOM -> {
-            R.string.help_text_not_supported_wonderboom
-          }
-          SpeakerModel.EPICBOOM,
-          SpeakerModel.HYPERBOOM -> {
-            R.string.help_text_not_supported_other_boom
-          }
-          SpeakerModel.BLAST,
-          SpeakerModel.MEGABLAST -> {
-            R.string.help_text_not_supported_blast
-          }
-          SpeakerModel.ROLL_2,
-          SpeakerModel.ROLL -> {
-            R.string.help_text_not_supported_roll
-          }
-          SpeakerModel.SOMETHING_ELSE -> {
-            R.string.help_text_not_supported_non_ue
-          }
+      when (speakerModel) {
+        SpeakerModel.BOOM_3,
+        SpeakerModel.BOOM_2,
+        SpeakerModel.BOOM,
+        SpeakerModel.MEGABOOM_3,
+        SpeakerModel.MEGABOOM -> {
+          R.string.help_text_supported
         }
+        SpeakerModel.WONDERBOOM_3,
+        SpeakerModel.WONDERBOOM_2,
+        SpeakerModel.WONDERBOOM -> {
+          R.string.help_text_not_supported_wonderboom
+        }
+        SpeakerModel.EPICBOOM,
+        SpeakerModel.HYPERBOOM -> {
+          R.string.help_text_not_supported_other_boom
+        }
+        SpeakerModel.BLAST,
+        SpeakerModel.MEGABLAST -> {
+          R.string.help_text_not_supported_blast
+        }
+        SpeakerModel.ROLL_2,
+        SpeakerModel.ROLL -> {
+          R.string.help_text_not_supported_roll
+        }
+        SpeakerModel.SOMETHING_ELSE -> {
+          R.string.help_text_not_supported_non_ue
+        }
+      }
     binding.helpText.text = getString(helpStringRes, getString(speakerModel.modelStringResId))
   }
 }

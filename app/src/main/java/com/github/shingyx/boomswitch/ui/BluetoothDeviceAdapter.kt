@@ -10,8 +10,8 @@ import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.BluetoothDeviceInfo
 
 class BluetoothDeviceAdapter(
-    private val activity: Activity,
-    private var devices: List<BluetoothDeviceInfo> = emptyList()
+  private val activity: Activity,
+  private var devices: List<BluetoothDeviceInfo> = emptyList(),
 ) : TypedAdapter<BluetoothDeviceInfo>(), Filterable {
   private val filter = NoFilter()
 
@@ -22,8 +22,8 @@ class BluetoothDeviceAdapter(
 
   override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
     val view =
-        convertView
-            ?: activity.layoutInflater.inflate(R.layout.dropdown_menu_popup_item, parent, false)
+      convertView
+        ?: activity.layoutInflater.inflate(R.layout.dropdown_menu_popup_item, parent, false)
     (view as TextView).text = devices[position].toString()
     return view
   }

@@ -9,14 +9,14 @@ import android.widget.TextView
 import com.github.shingyx.boomswitch.R
 
 class SpeakerModelAdapter(private val activity: Activity) :
-    TypedAdapter<SpeakerModel>(), Filterable {
+  TypedAdapter<SpeakerModel>(), Filterable {
   private val filter = NoFilter()
   private val speakerModels = SpeakerModel.entries
 
   override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
     val view =
-        convertView
-            ?: activity.layoutInflater.inflate(R.layout.dropdown_menu_popup_item, parent, false)
+      convertView
+        ?: activity.layoutInflater.inflate(R.layout.dropdown_menu_popup_item, parent, false)
     (view as TextView).setText(speakerModels[position].modelStringResId)
     return view
   }

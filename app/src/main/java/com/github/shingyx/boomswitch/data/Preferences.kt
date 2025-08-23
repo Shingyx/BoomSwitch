@@ -29,7 +29,7 @@ object Preferences {
   var appColorTheme: AppColorTheme
     get() {
       val nightModeValue =
-          sharedPreferences.getInt(KEY_NIGHT_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        sharedPreferences.getInt(KEY_NIGHT_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
       return AppColorTheme.fromNightModeValue(nightModeValue)
     }
     set(value) {
@@ -39,7 +39,7 @@ object Preferences {
   fun initialize(context: Context) {
     if (!this::sharedPreferences.isInitialized) {
       sharedPreferences =
-          context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
+        context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
     }
   }
 }
