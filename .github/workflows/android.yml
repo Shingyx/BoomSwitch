@@ -23,7 +23,7 @@ jobs:
       - name: Build with Gradle
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon buildDebug assembleDebug
+          ./gradlew --no-daemon buildDebug assembleDebug ktfmtCheck
       - name: Upload debug apk
         uses: actions/upload-artifact@v4
         with:
