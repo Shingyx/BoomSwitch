@@ -13,46 +13,47 @@ class BluetoothDeviceAdapter(
     private val activity: Activity,
     private var devices: List<BluetoothDeviceInfo> = emptyList()
 ) : TypedAdapter<BluetoothDeviceInfo>(), Filterable {
-    private val filter = NoFilter()
+  private val filter = NoFilter()
 
-    fun updateItems(items: List<BluetoothDeviceInfo>) {
-        devices = items
-        notifyDataSetChanged()
-    }
+  fun updateItems(items: List<BluetoothDeviceInfo>) {
+    devices = items
+    notifyDataSetChanged()
+  }
 
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-        val view = convertView
+  override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+    val view =
+        convertView
             ?: activity.layoutInflater.inflate(R.layout.dropdown_menu_popup_item, parent, false)
-        (view as TextView).text = devices[position].toString()
-        return view
+    (view as TextView).text = devices[position].toString()
+    return view
+  }
+
+  override fun getItem(position: Int): BluetoothDeviceInfo {
+    return devices[position]
+  }
+
+  override fun getItemId(position: Int): Long {
+    return position.toLong()
+  }
+
+  override fun getCount(): Int {
+    return devices.size
+  }
+
+  override fun getFilter(): Filter {
+    return filter
+  }
+
+  private inner class NoFilter : Filter() {
+    override fun performFiltering(constraint: CharSequence?): FilterResults {
+      return FilterResults().apply {
+        values = devices
+        count = devices.size
+      }
     }
 
-    override fun getItem(position: Int): BluetoothDeviceInfo {
-        return devices[position]
+    override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
+      notifyDataSetChanged()
     }
-
-    override fun getItemId(position: Int): Long {
-        return position.toLong()
-    }
-
-    override fun getCount(): Int {
-        return devices.size
-    }
-
-    override fun getFilter(): Filter {
-        return filter
-    }
-
-    private inner class NoFilter : Filter() {
-        override fun performFiltering(constraint: CharSequence?): FilterResults {
-            return FilterResults().apply {
-                values = devices
-                count = devices.size
-            }
-        }
-
-        override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
-            notifyDataSetChanged()
-        }
-    }
+  }
 }

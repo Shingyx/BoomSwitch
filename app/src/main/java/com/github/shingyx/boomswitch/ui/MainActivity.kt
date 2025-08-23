@@ -30,216 +30,212 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
-    private lateinit var binding: ActivityMainBinding
-    private lateinit var handler: Handler
-    private lateinit var adapter: BluetoothDeviceAdapter
-    private lateinit var bluetoothStateReceiver: BluetoothStateReceiver
+  private lateinit var binding: ActivityMainBinding
+  private lateinit var handler: Handler
+  private lateinit var adapter: BluetoothDeviceAdapter
+  private lateinit var bluetoothStateReceiver: BluetoothStateReceiver
 
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions(),
-        this::handlePermissionsResponse
-    )
+  private val requestPermissionLauncher =
+      registerForActivityResult(
+          ActivityResultContracts.RequestMultiplePermissions(), this::handlePermissionsResponse)
 
-    private val bluetoothOffAlertDialog = lazy {
-        MaterialAlertDialogBuilder(this)
-            .setMessage(R.string.bluetooth_turned_off_alert)
-            .setPositiveButton(android.R.string.ok, null)
-            .create()
-    }
+  private val bluetoothOffAlertDialog = lazy {
+    MaterialAlertDialogBuilder(this)
+        .setMessage(R.string.bluetooth_turned_off_alert)
+        .setPositiveButton(android.R.string.ok, null)
+        .create()
+  }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        setSupportActionBar(binding.toolbar)
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+    setSupportActionBar(binding.toolbar)
 
-        handler = Handler(Looper.getMainLooper())
-        adapter = BluetoothDeviceAdapter(this)
-        bluetoothStateReceiver = BluetoothStateReceiver(this::updateBluetoothDevices)
+    handler = Handler(Looper.getMainLooper())
+    adapter = BluetoothDeviceAdapter(this)
+    bluetoothStateReceiver = BluetoothStateReceiver(this::updateBluetoothDevices)
 
-        binding.selectSpeaker.setAdapter(adapter)
-        binding.selectSpeaker.onItemClickListener = adapter.onItemClick { item ->
-            Preferences.bluetoothDeviceInfo = item
-            binding.switchButton.isEnabled = true
+    binding.selectSpeaker.setAdapter(adapter)
+    binding.selectSpeaker.onItemClickListener =
+        adapter.onItemClick { item ->
+          Preferences.bluetoothDeviceInfo = item
+          binding.switchButton.isEnabled = true
         }
-        binding.selectSpeaker.setText(Preferences.bluetoothDeviceInfo?.toString())
-        binding.selectSpeaker.requestFocus()
+    binding.selectSpeaker.setText(Preferences.bluetoothDeviceInfo?.toString())
+    binding.selectSpeaker.requestFocus()
 
-        binding.switchButton.isEnabled =
-            Preferences.bluetoothDeviceInfo != null && BoomClient.hasBluetoothConnectPermission(this)
-        binding.switchButton.setOnClickListener { launch { switchBoom() } }
+    binding.switchButton.isEnabled =
+        Preferences.bluetoothDeviceInfo != null && BoomClient.hasBluetoothConnectPermission(this)
+    binding.switchButton.setOnClickListener { launch { switchBoom() } }
 
-        binding.version.text = getString(R.string.version, BuildConfig.VERSION_NAME)
+    binding.version.text = getString(R.string.version, BuildConfig.VERSION_NAME)
 
-        ContextCompat.registerReceiver(
-            this,
-            bluetoothStateReceiver,
-            BluetoothStateReceiver.intentFilter(),
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
+    ContextCompat.registerReceiver(
+        this,
+        bluetoothStateReceiver,
+        BluetoothStateReceiver.intentFilter(),
+        ContextCompat.RECEIVER_NOT_EXPORTED)
 
-        val permissionsToRequest = mutableListOf<String>()
-        if (!BoomClient.hasBluetoothConnectPermission(this)) {
-            permissionsToRequest.add(Manifest.permission.BLUETOOTH_CONNECT)
-        }
-        if (!hasPostNotificationsPermission()) {
-            permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
-        }
-        if (permissionsToRequest.isNotEmpty()) {
-            requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
-        }
+    val permissionsToRequest = mutableListOf<String>()
+    if (!BoomClient.hasBluetoothConnectPermission(this)) {
+      permissionsToRequest.add(Manifest.permission.BLUETOOTH_CONNECT)
     }
-
-    override fun onResume() {
-        super.onResume()
-        binding.selectSpeaker.dismissDropDown()
-        if (BoomClient.hasBluetoothConnectPermission(this)) {
-            updateBluetoothDevices()
-        }
+    if (!hasPostNotificationsPermission()) {
+      permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
     }
-
-    override fun onDestroy() {
-        unregisterReceiver(bluetoothStateReceiver)
-        super.onDestroy()
+    if (permissionsToRequest.isNotEmpty()) {
+      requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
     }
+  }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        return true
+  override fun onResume() {
+    super.onResume()
+    binding.selectSpeaker.dismissDropDown()
+    if (BoomClient.hasBluetoothConnectPermission(this)) {
+      updateBluetoothDevices()
     }
+  }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.choose_theme -> chooseTheme()
-            R.id.open_source_licenses -> showOpenSourceLicenses()
-            R.id.help -> showHelp()
-            else -> return super.onOptionsItemSelected(item)
-        }
-        return true
+  override fun onDestroy() {
+    unregisterReceiver(bluetoothStateReceiver)
+    super.onDestroy()
+  }
+
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    menuInflater.inflate(R.menu.main_menu, menu)
+    return true
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    when (item.itemId) {
+      R.id.choose_theme -> chooseTheme()
+      R.id.open_source_licenses -> showOpenSourceLicenses()
+      R.id.help -> showHelp()
+      else -> return super.onOptionsItemSelected(item)
     }
+    return true
+  }
 
-    private suspend fun switchBoom() {
-        val deviceInfo = Preferences.bluetoothDeviceInfo
+  private suspend fun switchBoom() {
+    val deviceInfo =
+        Preferences.bluetoothDeviceInfo
             ?: return Toast.makeText(this, R.string.select_speaker, Toast.LENGTH_LONG).show()
 
-        handler.removeCallbacksAndMessages(null)
+    handler.removeCallbacksAndMessages(null)
 
-        binding.switchButton.isEnabled = false
-        fadeView(binding.progressBar, true)
-        binding.progressDescription.text = ""
-        fadeView(binding.progressDescription, true)
+    binding.switchButton.isEnabled = false
+    fadeView(binding.progressBar, true)
+    binding.progressDescription.text = ""
+    fadeView(binding.progressDescription, true)
 
-        BoomClient.switchPower(this, deviceInfo) { progressMessage ->
-            runOnUiThread {
-                binding.progressDescription.text = progressMessage
-            }
-        }
-
-        binding.switchButton.isEnabled = true
-        fadeView(binding.progressBar, false)
-        handler.postDelayed({
-            fadeView(binding.progressDescription, false)
-        }, 10000)
+    BoomClient.switchPower(this, deviceInfo) { progressMessage ->
+      runOnUiThread { binding.progressDescription.text = progressMessage }
     }
 
-    private fun fadeView(view: View, show: Boolean) {
-        val newAlpha = if (show) 1f else 0f
-        view.visibility = View.VISIBLE
-        view.alpha = 1f - newAlpha
-        view.animate()
-            .setDuration(resources.getInteger(android.R.integer.config_shortAnimTime).toLong())
-            .alpha(newAlpha)
-            .setListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    view.visibility = if (show) View.VISIBLE else View.GONE
-                }
+    binding.switchButton.isEnabled = true
+    fadeView(binding.progressBar, false)
+    handler.postDelayed({ fadeView(binding.progressDescription, false) }, 10000)
+  }
+
+  private fun fadeView(view: View, show: Boolean) {
+    val newAlpha = if (show) 1f else 0f
+    view.visibility = View.VISIBLE
+    view.alpha = 1f - newAlpha
+    view
+        .animate()
+        .setDuration(resources.getInteger(android.R.integer.config_shortAnimTime).toLong())
+        .alpha(newAlpha)
+        .setListener(
+            object : AnimatorListenerAdapter() {
+              override fun onAnimationEnd(animation: Animator) {
+                view.visibility = if (show) View.VISIBLE else View.GONE
+              }
             })
+  }
+
+  private fun updateBluetoothDevices() {
+    var devicesInfo = BoomClient.getPairedDevicesInfo()
+
+    if (devicesInfo == null) {
+      if (!BoomClient.hasBluetoothConnectPermission(this)) {
+        requestPermissionLauncher.launch(arrayOf(Manifest.permission.BLUETOOTH_CONNECT))
+      } else {
+        bluetoothOffAlertDialog.value.show()
+      }
+      devicesInfo = emptyList()
+    } else {
+      if (bluetoothOffAlertDialog.isInitialized()) {
+        bluetoothOffAlertDialog.value.dismiss()
+      }
     }
 
-    private fun updateBluetoothDevices() {
-        var devicesInfo = BoomClient.getPairedDevicesInfo()
-
-        if (devicesInfo == null) {
-            if (!BoomClient.hasBluetoothConnectPermission(this)) {
-                requestPermissionLauncher.launch(arrayOf(Manifest.permission.BLUETOOTH_CONNECT))
-            } else {
-                bluetoothOffAlertDialog.value.show()
-            }
-            devicesInfo = emptyList()
+    binding.selectSpeakerContainer.error =
+        if (devicesInfo.isEmpty()) {
+          getString(R.string.no_devices_found)
         } else {
-            if (bluetoothOffAlertDialog.isInitialized()) {
-                bluetoothOffAlertDialog.value.dismiss()
-            }
+          null
         }
 
-        binding.selectSpeakerContainer.error = if (devicesInfo.isEmpty()) {
-            getString(R.string.no_devices_found)
-        } else {
-            null
+    adapter.updateItems(devicesInfo)
+  }
+
+  private fun chooseTheme() {
+    val themes = AppColorTheme.values()
+    val themeNames = themes.map { getString(it.descriptionResId) }.toTypedArray()
+    val currentThemeIndex = themes.indexOf(Preferences.appColorTheme)
+
+    MaterialAlertDialogBuilder(this)
+        .setTitle(R.string.choose_theme)
+        .setSingleChoiceItems(themeNames, currentThemeIndex) { dialog, i ->
+          dialog.dismiss()
+          val selectedTheme = themes[i]
+          Preferences.appColorTheme = selectedTheme
+          selectedTheme.apply()
         }
+        .show()
+  }
 
-        adapter.updateItems(devicesInfo)
-    }
+  private fun showOpenSourceLicenses() {
+    OssLicensesMenuActivity.setActivityTitle(getString(R.string.open_source_licenses))
+    startActivity(Intent(this, OssLicensesMenuActivity::class.java))
+  }
 
-    private fun chooseTheme() {
-        val themes = AppColorTheme.values()
-        val themeNames = themes.map { getString(it.descriptionResId) }.toTypedArray()
-        val currentThemeIndex = themes.indexOf(Preferences.appColorTheme)
+  private fun showHelp() {
+    startActivity(Intent(this, HelpActivity::class.java))
+  }
 
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.choose_theme)
-            .setSingleChoiceItems(themeNames, currentThemeIndex) { dialog, i ->
-                dialog.dismiss()
-                val selectedTheme = themes[i]
-                Preferences.appColorTheme = selectedTheme
-                selectedTheme.apply()
-            }
-            .show()
-    }
+  private fun hasPostNotificationsPermission(): Boolean {
+    return Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+        ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+  }
 
-    private fun showOpenSourceLicenses() {
-        OssLicensesMenuActivity.setActivityTitle(getString(R.string.open_source_licenses))
-        startActivity(Intent(this, OssLicensesMenuActivity::class.java))
-    }
-
-    private fun showHelp() {
-        startActivity(Intent(this, HelpActivity::class.java))
-    }
-
-    private fun hasPostNotificationsPermission(): Boolean {
-        return Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-                ActivityCompat.checkSelfPermission(
-                    this, Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun handlePermissionsResponse(permissions: Map<String, Boolean>) {
-        permissions.forEach { (permission, granted) ->
-            when (permission) {
-                Manifest.permission.BLUETOOTH_CONNECT -> {
-                    if (granted) {
-                        updateBluetoothDevices()
-                    } else {
-                        MaterialAlertDialogBuilder(this)
-                            .setMessage(R.string.bluetooth_missing_permission_alert)
-                            .setPositiveButton(android.R.string.ok) { _, _ ->
-                                updateBluetoothDevices()
-                            }
-                            .show()
-                    }
+  private fun handlePermissionsResponse(permissions: Map<String, Boolean>) {
+    permissions.forEach { (permission, granted) ->
+      when (permission) {
+        Manifest.permission.BLUETOOTH_CONNECT -> {
+          if (granted) {
+            updateBluetoothDevices()
+          } else {
+            MaterialAlertDialogBuilder(this)
+                .setMessage(R.string.bluetooth_missing_permission_alert)
+                .setPositiveButton(android.R.string.ok) { _, _ -> updateBluetoothDevices() }
+                .show()
+          }
+        }
+        Manifest.permission.POST_NOTIFICATIONS -> {
+          if (!granted && shouldShowRequestPermissionRationale(permission)) {
+            MaterialAlertDialogBuilder(this)
+                .setMessage(R.string.notification_missing_permission_alert)
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                  requestPermissionLauncher.launch(arrayOf(permission))
                 }
-                Manifest.permission.POST_NOTIFICATIONS -> {
-                    if (!granted && shouldShowRequestPermissionRationale(permission)) {
-                        MaterialAlertDialogBuilder(this)
-                            .setMessage(R.string.notification_missing_permission_alert)
-                            .setPositiveButton(android.R.string.ok) { _, _ ->
-                                requestPermissionLauncher.launch(arrayOf(permission))
-                            }
-                            .setNegativeButton(android.R.string.cancel, null)
-                            .show()
-                    }
-                }
-            }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+          }
         }
+      }
     }
+  }
 }

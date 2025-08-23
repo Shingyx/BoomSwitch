@@ -6,14 +6,14 @@ import timber.log.Timber
 import timber.log.Timber.DebugTree
 
 class BoomSwitchApplication : Application() {
-    override fun onCreate() {
-        super.onCreate()
+  override fun onCreate() {
+    super.onCreate()
 
-        if (BuildConfig.DEBUG) {
-            Timber.plant(DebugTree())
-        }
-
-        Preferences.initialize(this)
-        Preferences.appColorTheme.apply()
+    if (BuildConfig.DEBUG) {
+      Timber.plant(DebugTree())
     }
+
+    Preferences.initialize(this)
+    Preferences.appColorTheme.apply()
+  }
 }
