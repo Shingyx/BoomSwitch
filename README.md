@@ -21,6 +21,10 @@ The fastest way to remotely turn your UE BOOM Bluetooth speaker on and off!
 Simply select your UE BOOM speaker from the list of paired Bluetooth devices and then press Switch to turn it on or off. Alternatively, place the widget onto your home screen to switch the speaker on or off with a single tap.
 
 <b>Supported speakers</b>
+- BOOM 4 (unconfirmed)
+- MEGABOOM 4 (unconfirmed)
+- EVERBOOM (unconfirmed)
+- EPICBOOM (unconfirmed)
 - BOOM 3
 - MEGABOOM 3
 - BOOM 2
@@ -29,10 +33,10 @@ Simply select your UE BOOM speaker from the list of paired Bluetooth devices and
 - ROLL / ROLL 2 (unconfirmed)
 
 <b>Unsupported speakers</b>
-- WONDERBOOM / WONDERBOOM 2 / WONDERBOOM 3
-- BLAST / MEGABLAST (unconfirmed)
-- EPICBOOM (unconfirmed)
+- WONDERBOOM / WONDERBOOM 2 / WONDERBOOM 3 / WONDERBOOM 4 / WONDERBOOM PLAY
+- MINIROLL
 - HYPERBOOM (unconfirmed)
+- BLAST / MEGABLAST (unconfirmed)
 
 Please raise a GitHub issue or send an email if you experience any issues or can help confirm support for any of the speakers listed above. The list of supported and unsupported speakers will be updated as more information is obtained. Your speaker may require a firmware update to work with this app.
 
