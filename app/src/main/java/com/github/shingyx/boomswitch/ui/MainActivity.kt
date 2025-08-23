@@ -53,6 +53,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     binding = ActivityMainBinding.inflate(layoutInflater)
     setContentView(binding.root)
     setSupportActionBar(binding.toolbar)
+    setSystemBarColors(this, binding.root)
 
     handler = Handler(Looper.getMainLooper())
     adapter = BluetoothDeviceAdapter(this)
