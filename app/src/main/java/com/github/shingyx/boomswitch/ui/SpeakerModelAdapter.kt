@@ -11,7 +11,7 @@ import com.github.shingyx.boomswitch.R
 class SpeakerModelAdapter(private val activity: Activity) :
     TypedAdapter<SpeakerModel>(), Filterable {
   private val filter = NoFilter()
-  private val speakerModels = SpeakerModel.values()
+  private val speakerModels = SpeakerModel.entries
 
   override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
     val view =

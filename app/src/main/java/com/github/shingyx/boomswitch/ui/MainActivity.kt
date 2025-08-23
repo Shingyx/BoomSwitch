@@ -181,7 +181,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
   }
 
   private fun chooseTheme() {
-    val themes = AppColorTheme.values()
+    val themes = AppColorTheme.entries
     val themeNames = themes.map { getString(it.descriptionResId) }.toTypedArray()
     val currentThemeIndex = themes.indexOf(Preferences.appColorTheme)
 
