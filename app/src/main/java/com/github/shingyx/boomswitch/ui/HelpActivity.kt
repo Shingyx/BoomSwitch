@@ -48,11 +48,16 @@ class HelpActivity : AppCompatActivity() {
         SpeakerModel.MEGABOOM -> {
           R.string.help_text_supported
         }
+        SpeakerModel.WONDERBOOM_PLAY,
+        SpeakerModel.WONDERBOOM_4,
         SpeakerModel.WONDERBOOM_3,
         SpeakerModel.WONDERBOOM_2,
         SpeakerModel.WONDERBOOM -> {
           R.string.help_text_not_supported_wonderboom
         }
+        SpeakerModel.BOOM_4,
+        SpeakerModel.MEGABOOM_4,
+        SpeakerModel.EVERBOOM,
         SpeakerModel.EPICBOOM,
         SpeakerModel.HYPERBOOM -> {
           R.string.help_text_not_supported_other_boom
@@ -60,6 +65,9 @@ class HelpActivity : AppCompatActivity() {
         SpeakerModel.BLAST,
         SpeakerModel.MEGABLAST -> {
           R.string.help_text_not_supported_blast
+        }
+        SpeakerModel.MINIROLL -> {
+          R.string.help_text_not_supported_miniroll
         }
         SpeakerModel.ROLL_2,
         SpeakerModel.ROLL -> {
