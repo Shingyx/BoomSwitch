@@ -10,42 +10,43 @@ import com.github.shingyx.boomswitch.R
 
 class SpeakerModelAdapter(private val activity: Activity) :
     TypedAdapter<SpeakerModel>(), Filterable {
-    private val filter = NoFilter()
-    private val speakerModels = SpeakerModel.values()
+  private val filter = NoFilter()
+  private val speakerModels = SpeakerModel.entries
 
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-        val view = convertView
+  override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+    val view =
+        convertView
             ?: activity.layoutInflater.inflate(R.layout.dropdown_menu_popup_item, parent, false)
-        (view as TextView).setText(speakerModels[position].modelStringResId)
-        return view
+    (view as TextView).setText(speakerModels[position].modelStringResId)
+    return view
+  }
+
+  override fun getItem(position: Int): SpeakerModel {
+    return speakerModels[position]
+  }
+
+  override fun getItemId(position: Int): Long {
+    return position.toLong()
+  }
+
+  override fun getCount(): Int {
+    return speakerModels.size
+  }
+
+  override fun getFilter(): Filter {
+    return filter
+  }
+
+  private inner class NoFilter : Filter() {
+    override fun performFiltering(constraint: CharSequence?): FilterResults {
+      return FilterResults().apply {
+        values = speakerModels
+        count = speakerModels.size
+      }
     }
 
-    override fun getItem(position: Int): SpeakerModel {
-        return speakerModels[position]
+    override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
+      notifyDataSetChanged()
     }
-
-    override fun getItemId(position: Int): Long {
-        return position.toLong()
-    }
-
-    override fun getCount(): Int {
-        return speakerModels.size
-    }
-
-    override fun getFilter(): Filter {
-        return filter
-    }
-
-    private inner class NoFilter : Filter() {
-        override fun performFiltering(constraint: CharSequence?): FilterResults {
-            return FilterResults().apply {
-                values = speakerModels
-                count = speakerModels.size
-            }
-        }
-
-        override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
-            notifyDataSetChanged()
-        }
-    }
+  }
 }

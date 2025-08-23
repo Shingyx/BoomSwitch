@@ -15,64 +15,56 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class ShortcutActivity : AppCompatActivity(), CoroutineScope by MainScope() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        finish() // Finish ASAP, or multiple tasks could appear
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    finish() // Finish ASAP, or multiple tasks could appear
 
-        if (intent.action != ACTION_SWITCH) {
-            return Timber.w("Unexpected intent action ${intent.action}")
-        }
-
-        val deviceInfo = BluetoothDeviceInfo.createFromIntent(intent)
-            ?: Preferences.bluetoothDeviceInfo
-
-        if (deviceInfo == null || !BoomClient.hasBluetoothConnectPermission(this)) {
-            if (deviceInfo == null) {
-                updateToast(getString(R.string.select_speaker))
-            }
-            val intent = Intent(this, MainActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            startActivity(intent)
-        } else {
-            launch { switchBoom(deviceInfo) }
-        }
+    if (intent.action != ACTION_SWITCH) {
+      return Timber.w("Unexpected intent action ${intent.action}")
     }
 
-    private suspend fun switchBoom(deviceInfo: BluetoothDeviceInfo) {
-        BoomClient.switchPower(this, deviceInfo) { progressMessage ->
-            runOnUiThread {
-                updateToast(progressMessage)
-            }
-        }
+    val deviceInfo = BluetoothDeviceInfo.createFromIntent(intent) ?: Preferences.bluetoothDeviceInfo
+
+    if (deviceInfo == null || !BoomClient.hasBluetoothConnectPermission(this)) {
+      if (deviceInfo == null) {
+        updateToast(getString(R.string.select_speaker))
+      }
+      val intent = Intent(this, MainActivity::class.java)
+      intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+      startActivity(intent)
+    } else {
+      launch { switchBoom(deviceInfo) }
     }
+  }
 
-    private fun updateToast(text: String) {
-        toast?.cancel()
-        toast = Toast.makeText(this, text, Toast.LENGTH_LONG).also {
-            it.show()
-        }
+  private suspend fun switchBoom(deviceInfo: BluetoothDeviceInfo) {
+    BoomClient.switchPower(this, deviceInfo) { progressMessage ->
+      runOnUiThread { updateToast(progressMessage) }
     }
+  }
 
-    companion object {
-        const val ACTION_SWITCH = "com.github.shingyx.boomswitch.SWITCH"
+  private fun updateToast(text: String) {
+    toast?.cancel()
+    toast = Toast.makeText(this, text, Toast.LENGTH_LONG).also { it.show() }
+  }
 
-        private var toast: Toast? = null
+  companion object {
+    const val ACTION_SWITCH = "com.github.shingyx.boomswitch.SWITCH"
 
-        fun createShortcutIntent(
-            context: Context,
-            bluetoothDeviceInfo: BluetoothDeviceInfo?
-        ): Intent {
-            val shortcutIntent = Intent(ACTION_SWITCH, null, context, ShortcutActivity::class.java)
-            bluetoothDeviceInfo?.addToIntent(shortcutIntent)
-            val shortcutName = bluetoothDeviceInfo?.name ?: context.getString(R.string.app_name)
-            val iconRes = Intent.ShortcutIconResource.fromContext(context, R.mipmap.ic_launcher)
+    private var toast: Toast? = null
 
-            @Suppress("DEPRECATION") // Use deprecated approach for no icon badge
-            return Intent().apply {
-                putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent)
-                putExtra(Intent.EXTRA_SHORTCUT_NAME, shortcutName)
-                putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, iconRes)
-            }
-        }
+    fun createShortcutIntent(context: Context, bluetoothDeviceInfo: BluetoothDeviceInfo?): Intent {
+      val shortcutIntent = Intent(ACTION_SWITCH, null, context, ShortcutActivity::class.java)
+      bluetoothDeviceInfo?.addToIntent(shortcutIntent)
+      val shortcutName = bluetoothDeviceInfo?.name ?: context.getString(R.string.app_name)
+      val iconRes = Intent.ShortcutIconResource.fromContext(context, R.mipmap.ic_launcher)
+
+      @Suppress("DEPRECATION") // Use deprecated approach for no icon badge
+      return Intent().apply {
+        putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent)
+        putExtra(Intent.EXTRA_SHORTCUT_NAME, shortcutName)
+        putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, iconRes)
+      }
     }
+  }
 }

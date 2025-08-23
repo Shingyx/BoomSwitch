@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.android.gms.oss-licenses-plugin'
+apply plugin: "com.ncorti.ktfmt.gradle"
 apply plugin: 'kotlin-android'
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")
