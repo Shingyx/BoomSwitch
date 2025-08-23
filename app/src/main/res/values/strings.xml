@@ -40,17 +40,23 @@
     <string name="speaker_boom">BOOM</string>
     <string name="speaker_boom_2">BOOM 2</string>
     <string name="speaker_boom_3">BOOM 3</string>
+    <string name="speaker_boom_4">BOOM 4</string>
     <string name="speaker_megaboom">MEGABOOM</string>
     <string name="speaker_megaboom_3">MEGABOOM 3</string>
+    <string name="speaker_megaboom_4">MEGABOOM 4</string>
     <string name="speaker_wonderboom">WONDERBOOM</string>
     <string name="speaker_wonderboom_2">WONDERBOOM 2</string>
     <string name="speaker_wonderboom_3">WONDERBOOM 3</string>
+    <string name="speaker_wonderboom_4">WONDERBOOM 4</string>
+    <string name="speaker_wonderboom_play">WONDERBOOM PLAY</string>
+    <string name="speaker_everboom">EVERBOOM</string>
     <string name="speaker_epicboom">EPICBOOM</string>
     <string name="speaker_hyperboom">HYPERBOOM</string>
     <string name="speaker_blast">BLAST</string>
     <string name="speaker_megablast">MEGABLAST</string>
     <string name="speaker_roll">ROLL</string>
     <string name="speaker_roll_2">ROLL 2</string>
+    <string name="speaker_miniroll">MINIROLL</string>
     <string name="speaker_something_else">Something else</string>
 
     <string name="help_intro">Having trouble connecting? Please select the model of your speaker below.</string>
@@ -58,6 +64,7 @@
     <string name="help_text_not_supported_wonderboom">%1$s is not supported by this app, because the WONDERBOOM speakers do not support remote power. There is no app for the WONDERBOOM range of speakers.</string>
     <string name="help_text_not_supported_other_boom">%1$s has not been tested with this app, so support is unknown. Please use the official BOOM app if you\'re experiencing any issues.\n\nGet the official BOOM app here: https://play.google.com/store/apps/details?id=com.logitech.ueboom</string>
     <string name="help_text_not_supported_blast">%1$s has not been tested with this app, so support is unknown. Please use the official BLAST app if you\'re experiencing any issues.\n\nGet the official BLAST app here: https://play.google.com/store/apps/details?id=com.logitech.newjackcity</string>
+    <string name="help_text_not_supported_miniroll">%1$s is not supported by this app, because the MINIROLL speakers do not support remote power. There is no app for the MINIROLL range of speakers.</string>
     <string name="help_text_not_supported_roll">%1$s has not been tested with this app, so support is unknown. Please use the official ROLL app if you\'re experiencing any issues.\n\nGet the official ROLL app here: https://play.google.com/store/apps/details?id=com.logitech.ueroll</string>
     <string name="help_text_not_supported_non_ue">Your speaker is not supported by this app. BOOM Switch only supports a select range of speakers made by the Ultimate Ears brand. If your speaker is not on the list above, then your speaker is not an Ultimate Ears speaker.</string>
 </resources>
