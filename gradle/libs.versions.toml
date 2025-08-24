@@ -1,0 +1,26 @@
+[versions]
+agp = "8.12.1"
+appcompat = "1.7.1"
+constraintlayout = "2.2.1"
+kotlin = "2.2.10"
+kotlinxCoroutines = "1.10.2"
+ktfmt = "0.23.0"
+material = "1.12.0"
+ossLicenses = "17.2.2"
+ossLicensesPlugin = "0.10.7"
+timber = "5.0.1"
+
+[libraries]
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+oss-licenses = { module = "com.google.android.gms:play-services-oss-licenses", version.ref = "ossLicenses" }
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
+oss-licenses-plugin = { id = "com.google.android.gms.oss-licenses-plugin", version.ref = "ossLicensesPlugin" }
