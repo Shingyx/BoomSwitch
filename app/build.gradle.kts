@@ -33,8 +33,8 @@ android {
     applicationId = "com.github.shingyx.boomswitch"
     minSdk = 23
     targetSdk = 36
-    versionCode = 13
-    versionName = "1.9"
+    versionCode = 14
+    versionName = "1.10"
   }
   buildTypes {
     getByName("debug") {
