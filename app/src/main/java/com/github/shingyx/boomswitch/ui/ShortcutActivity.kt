@@ -5,6 +5,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.graphics.drawable.IconCompat
 import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.BluetoothDeviceInfo
 import com.github.shingyx.boomswitch.data.BoomClient
@@ -65,6 +67,23 @@ class ShortcutActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         putExtra(Intent.EXTRA_SHORTCUT_NAME, shortcutName)
         putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, iconRes)
       }
+    }
+
+    fun createShortcutInfo(
+      context: Context,
+      bluetoothDeviceInfo: BluetoothDeviceInfo?,
+    ): ShortcutInfoCompat {
+      val shortcutIntent = Intent(ACTION_SWITCH, null, context, ShortcutActivity::class.java)
+      bluetoothDeviceInfo?.addToIntent(shortcutIntent)
+      val shortcutId = bluetoothDeviceInfo?.address ?: "last-used"
+      val shortcutName = bluetoothDeviceInfo?.name ?: context.getString(R.string.app_name)
+      val icon = IconCompat.createWithResource(context, R.mipmap.ic_launcher)
+
+      return ShortcutInfoCompat.Builder(context, shortcutId)
+        .setIntent(shortcutIntent)
+        .setShortLabel(shortcutName)
+        .setIcon(icon)
+        .build()
     }
   }
 }

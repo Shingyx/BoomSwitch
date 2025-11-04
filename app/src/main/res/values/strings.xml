@@ -26,6 +26,7 @@
     <string name="error_timed_out">Timed out switching %1$s\'s power.</string>
     <string name="error_switching_already_in_progress">Switching %1$s already in progress</string>
 
+    <string name="create_shortcut">Create shortcut</string>
     <string name="choose_theme">Choose theme</string>
     <string name="light">Light</string>
     <string name="dark">Dark</string>
