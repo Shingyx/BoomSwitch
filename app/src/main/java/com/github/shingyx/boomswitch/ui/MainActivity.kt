@@ -17,6 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.pm.ShortcutManagerCompat
 import com.github.shingyx.boomswitch.BuildConfig
 import com.github.shingyx.boomswitch.R
 import com.github.shingyx.boomswitch.data.AppColorTheme
@@ -108,11 +109,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
     menuInflater.inflate(R.menu.main_menu, menu)
+    if (!ShortcutManagerCompat.isRequestPinShortcutSupported(this)) {
+      menu.findItem(R.id.create_shortcut)?.isVisible = false
+    }
     return true
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
+      R.id.create_shortcut -> createShortcut()
       R.id.choose_theme -> chooseTheme()
       R.id.open_source_licenses -> showOpenSourceLicenses()
       R.id.help -> showHelp()
@@ -183,6 +188,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
       }
 
     adapter.updateItems(devicesInfo)
+  }
+
+  private fun createShortcut() {
+    val shortcutInfo = ShortcutActivity.createShortcutInfo(this, Preferences.bluetoothDeviceInfo)
+    ShortcutManagerCompat.requestPinShortcut(this, shortcutInfo, null)
   }
 
   private fun chooseTheme() {
